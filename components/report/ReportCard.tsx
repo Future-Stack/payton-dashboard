@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FiTrash2, FiCheck, FiX } from "react-icons/fi";
-import { TbRipple, TbMapPin, TbAnchor, TbFish } from "react-icons/tb";
+import { FiTrash2, FiCheck } from "react-icons/fi";
 
 export type Report = {
   id: number;
@@ -19,6 +18,7 @@ type ReportCardProps = {
   report: Report;
   onApprove?: (id: number) => void;
   onDelete?: (id: number) => void;
+  onViewDetails?: (report: Report) => void;
 };
 
 function getInitials(name: string) {
@@ -44,10 +44,10 @@ export default function ReportCard({
   report,
   onApprove,
   onDelete,
+  onViewDetails,
 }: ReportCardProps) {
   const [localStatus, setLocalStatus] = useState(report.status);
   const [deleted, setDeleted] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (deleted) return null;
 
@@ -165,7 +165,7 @@ export default function ReportCard({
             transition-all duration-200 hover:shadow-lg hover:shadow-cyan-900/30
             text-center cursor-pointer
           "
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => onViewDetails?.(report)}
         >
           View Details
         </button>
@@ -205,128 +205,6 @@ export default function ReportCard({
         </button>
       </div>
 
-      {/* Modal Overlay */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-hidden">
-          {/* Modal Container */}
-          <div className="bg-[#1C2028] w-full max-w-110 rounded-2xl shadow-2xl shadow-black/50 border border-[#2A303C] flex flex-col max-h-[90vh]">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#2A303C] shrink-0">
-              <h2 className="text-xl font-bold text-white">Report Details</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2A303C] hover:bg-[#343B4A] text-gray-400 transition-colors cursor-pointer"
-              >
-                <FiX className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 flex flex-col gap-6 overflow-hidden">
-              {/* Report Information Container */}
-              <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold text-lg">
-                    Report Information
-                  </h3>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#10B981]/10 rounded-md border border-[#10B981]/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></div>
-                    <span className="text-xs text-[#10B981] font-medium">
-                      Online
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <span className="text-[#8B95A5] text-sm">User</span>
-                    <span className="text-white text-sm font-medium">
-                      {report.username}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <span className="text-[#8B95A5] text-sm">Grid</span>
-                    <span className="text-white text-sm font-medium">
-                      {report.grid}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <span className="text-[#8B95A5] text-sm">Species</span>
-                    <span className="text-white text-sm font-medium">
-                      {report.species}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <span className="text-[#8B95A5] text-sm">Status</span>
-                    <span
-                      className={`text-sm font-bold uppercase ${
-                        localStatus === "approved"
-                          ? "text-[#10B981]"
-                          : localStatus === "tagged"
-                            ? "text-[#FF6B35]"
-                            : "text-[#3B82F6]"
-                      }`}
-                    >
-                      {statusLabel}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <span className="text-[#8B95A5] text-sm">Flags</span>
-                    <span className="text-white text-sm font-bold">
-                      {report.flagCount || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fishing Details Container */}
-              <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
-                <h3 className="text-white font-semibold text-lg mb-4">
-                  Fishing Details
-                </h3>
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <div className="flex items-center gap-2 text-cyan-400">
-                      <TbRipple className="w-5 h-5" />
-                      <span className="text-[#8B95A5] text-sm">Depth</span>
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      120 ft
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <div className="flex items-center gap-2 text-blue-400">
-                      <TbMapPin className="w-5 h-5" />
-                      <span className="text-[#8B95A5] text-sm">Position</span>
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      Suspended
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <div className="flex items-center gap-2 text-indigo-400">
-                      <TbAnchor className="w-5 h-5" />
-                      <span className="text-[#8B95A5] text-sm">Method</span>
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      Trolling
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                    <div className="flex items-center gap-2 text-teal-400">
-                      <TbFish className="w-5 h-5" />
-                      <span className="text-[#8B95A5] text-sm">Bait</span>
-                    </div>
-                    <span className="text-white text-sm font-medium">
-                      Ballyhoo
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
