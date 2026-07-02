@@ -24,15 +24,19 @@ const items: DistributionItem[] = [
 
 export default function AccessLevelDistribution() {
   return (
-    <section className="bg-[#182235] rounded-3xl border border-[#1f2d40]/40 shadow-lg p-6 md:p-8">
-      <h2 className="text-lg font-bold text-white mb-6 tracking-wide">Access Level Distribution</h2>
+    <section className="bg-[#19304A] rounded-3xl border border-[#1f2d40]/40 shadow-lg p-6 md:p-8">
+      <h2 className="text-lg font-bold text-white mb-6 tracking-wide">
+        Access Level Distribution
+      </h2>
 
       <div className="flex flex-col gap-6">
         {items.map((item) => (
           <div key={item.label} className="flex flex-col gap-2.5">
             {/* Row: Label + Count */}
             <div className="flex justify-between items-center">
-              <span className="text-sm text-[#8f9cae] font-medium">{item.label}</span>
+              <span className="text-sm text-[#8f9cae] font-medium">
+                {item.label}
+              </span>
               <span className="text-sm font-bold text-white">
                 {item.count.toLocaleString()} ({item.percent}%)
               </span>

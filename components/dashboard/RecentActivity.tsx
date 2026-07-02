@@ -54,8 +54,17 @@ const activities: ActivityType[] = [
 
 export default function RecentActivity() {
   return (
-    <section className="bg-[#182235] rounded-3xl border border-[#1f2d40]/40 shadow-lg p-6 md:p-8">
-      <h2 className="text-lg font-bold text-white mb-5 tracking-wide">Recent Activity</h2>
+    <section
+      className="     p-6 md:p-8"
+      style={{
+        borderRadius: "20px",
+        border: "1px solid #223C59",
+        background: "#19304A",
+      }}
+    >
+      <h2 className="text-lg font-bold text-white mb-5 tracking-wide">
+        Recent Activity
+      </h2>
 
       <div className="flex flex-col gap-3">
         {activities.map((activity) => {
@@ -63,12 +72,19 @@ export default function RecentActivity() {
           return (
             <div
               key={activity.id}
-              className="flex items-center justify-between bg-[#0d131f]/50 hover:bg-[#0d131f]/80 transition-colors rounded-2xl px-5 py-4 group"
+              className="flex items-center justify-between   hover:bg-[#0d131f]/80 transition-colors   px-5 py-4 group"
+              style={{
+                borderRadius: " 12px",
+                background: " rgba(34, 68, 107, 0.50)",
+                backdropFilter: " blur(29.5px)",
+              }}
             >
               {/* Left: Icon + Content */}
               <div className="flex items-center gap-4">
                 {/* Icon bubble */}
-                <div className={`w-10 h-10 rounded-full ${activity.iconBg} flex items-center justify-center text-white shadow-sm shrink-0`}>
+                <div
+                  className={`w-10 h-10 rounded-full ${activity.iconBg} flex items-center justify-center text-white shadow-sm shrink-0`}
+                >
                   <Icon className="w-4.5 h-4.5" />
                 </div>
 
@@ -84,7 +100,9 @@ export default function RecentActivity() {
 
               {/* Right: Timestamp */}
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8f9cae] shrink-0 ml-4">
-                <span className={`w-1.5 h-1.5 rounded-full ${activity.dotColor} opacity-60`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${activity.dotColor} opacity-60`}
+                />
                 <span>+ {activity.time}</span>
               </div>
             </div>

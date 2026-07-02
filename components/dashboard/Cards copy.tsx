@@ -124,15 +124,15 @@ export default function Cards() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 w-full">
       {/* ── CARD 1: Total Users ── */}
-      <div className="bg-[#FF6B35] rounded-3xl overflow-hidden flex flex-col h-68.5 shadow-lg">
-        <div className="flex-1 min-h-0 flex flex-col px-6 pt-2 bg-[#19304A] rounded-b-4xl">
+      <div className="relative bg-[#19304A] rounded-3xl overflow-hidden flex flex-col h-68 border border-[#1f2d40]/40 shadow-lg">
+        <div className="flex-1 flex flex-col px-6    h-48">
           {/* Big number */}
           <h3 className="text-[2rem] font-bold text-white tracking-tight leading-none mt-3">
             31,200
           </h3>
 
           {/* Area Chart – fills remaining space */}
-          <div className="flex-1 -mx-2 -mt-3 h-20">
+          <div className="flex-1 -mx-2 -mt-3">
             {isMounted && (
               <Chart
                 options={usersAreaOptions}
@@ -145,7 +145,7 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-2 mb-2 shrink-0 shadow-sm">
+          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-1.5 px-3 w-fit mb-3 h-10">
             <span className="w-6 h-6 rounded-lg bg-[#ff6b35] flex items-center justify-center text-white shrink-0">
               <FiUsers className="w-3.5 h-3.5" />
             </span>
@@ -156,7 +156,7 @@ export default function Cards() {
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="bg-[#FF6B35] px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
           <span>Total users increase rate</span>
           <span className="flex items-center gap-1 bg-white/10 py-0.5 px-2 rounded-full">
             ↗ +42 this week
@@ -164,126 +164,99 @@ export default function Cards() {
         </div>
       </div>
 
-      {/* ── CARD 2: Pro Users ── */}
-      <div className="bg-[#00897b] rounded-3xl overflow-hidden flex flex-col h-68.5 shadow-lg">
-        <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
+      {/* ── CARD 2: Pro Users (3D Slanted Columns SVG) ── */}
+      <div className="bg-[#19304A] rounded-3xl overflow-hidden flex flex-col h-68 border border-[#1f2d40]/40 shadow-lg">
+        <div className="flex-1 flex flex-col px-6 pt-5">
           <h3 className="text-[2rem] font-bold text-white tracking-tight leading-none">
             342
           </h3>
 
-          <div className="flex-1 min-h-0 flex items-end justify-center pb-1 mt-2">
+          <div className="flex-1 flex items-end justify-center pb-1 mt-2">
             <svg
-              viewBox="0 0 280 120"
-              className="w-full h-full max-h-32"
+              viewBox="0 0 290 110"
+              className="w-full h-full max-h-30"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
                 <linearGradient id="og" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ea580c" />
-                  <stop offset="100%" stopColor="#c2410c" />
+                  <stop offset="0%" stopColor="#ff7a45" />
+                  <stop offset="100%" stopColor="#c94010" />
                 </linearGradient>
                 <linearGradient id="yg" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#b45309" />
+                  <stop offset="0%" stopColor="#ffc533" />
+                  <stop offset="100%" stopColor="#d68000" />
                 </linearGradient>
                 <linearGradient id="tg" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#0d9488" />
-                  <stop offset="100%" stopColor="#0f766e" />
+                  <stop offset="0%" stopColor="#26d0be" />
+                  <stop offset="100%" stopColor="#008573" />
                 </linearGradient>
               </defs>
 
-              <polygon
-                points="15,40 85,20 85,110 15,110"
-                fill="url(#og)"
-                stroke="url(#og)"
-                strokeWidth="12"
-                strokeLinejoin="round"
-              />
+              <polygon points="12,30 78,10 78,105 12,105" fill="url(#og)" />
               <text
-                x="50"
-                y="14"
-                fill="#f8fafc"
-                fontSize="11"
-                fontWeight="400"
+                x="45"
+                y="16"
+                fill="#fff"
+                fontSize="9"
+                fontWeight="700"
                 textAnchor="middle"
-                transform="rotate(-15, 50, 14)"
+                transform="rotate(-12,45,24)"
+                opacity="0.92"
               >
                 Total users
               </text>
 
-              <polygon
-                points="105,75 175,65 175,110 105,110"
-                fill="url(#yg)"
-                stroke="url(#yg)"
-                strokeWidth="12"
-                strokeLinejoin="round"
-              />
+              <polygon points="108,70 174,55 174,105 108,105" fill="url(#yg)" />
               <text
-                x="140"
-                y="53"
-                fill="#f8fafc"
-                fontSize="11"
-                fontWeight="400"
+                x="141"
+                y="50"
+                fill="#fff"
+                fontSize="9"
+                fontWeight="700"
                 textAnchor="middle"
-                transform="rotate(-8, 140, 53)"
+                transform="rotate(-8,141,50)"
+                opacity="0.92"
               >
                 Premium user
               </text>
 
-              <polygon
-                points="195,50 265,35 265,110 195,110"
-                fill="url(#tg)"
-                stroke="url(#tg)"
-                strokeWidth="12"
-                strokeLinejoin="round"
-              />
+              <polygon points="204,58 270,42 270,105 204,105" fill="url(#tg)" />
               <text
-                x="230"
-                y="30"
-                fill="#f8fafc"
-                fontSize="11"
-                fontWeight="400"
+                x="237"
+                y="38"
+                fill="#fff"
+                fontSize="9"
+                fontWeight="700"
                 textAnchor="middle"
-                transform="rotate(-12, 230, 30)"
+                transform="rotate(-10,237,38)"
+                opacity="0.92"
               >
                 Free user
               </text>
             </svg>
           </div>
 
-          <div className="flex items-center gap-3 py-1 mt-2 mb-3 w-fit shrink-0">
-            <span className="w-8 h-8 rounded-xl bg-[#00897b] flex items-center justify-center text-white shrink-0">
-              <FaCrown className="w-5 h-5" />
+          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-1.5 px-3 w-fit mb-3">
+            <span className="w-6 h-6 rounded-lg bg-[#00897b] flex items-center justify-center text-white shrink-0">
+              <FaCrown className="w-3 h-3" />
             </span>
-            <span className="text-[14px] font-normal text-white whitespace-nowrap">
+            <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
               Pro Users
             </span>
           </div>
         </div>
-        {/* bottom banner  */}
-        <div className="px-5 py-2 flex justify-between items-center text-white text-[12px] font-normal tracking-wide shrink-0">
+
+        <div className="bg-[#00897b] px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
           <span>Total pro users increase rate</span>
-          <span className="flex items-center gap-1 font-semibold">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M7 17l9.2-9.2M17 17V7H7" />
-            </svg>
-            27% conversion
+          <span className="flex items-center gap-1 bg-white/10 py-0.5 px-2 rounded-full">
+            ↗ 27% conversion
           </span>
         </div>
       </div>
 
       {/* ── CARD 3: Total Reports (Donut + Legend) ── */}
-      <div className="bg-[#9A670B] rounded-3xl overflow-hidden flex flex-col h-68 shadow-lg">
-        <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
+      <div className="bg-[#19304A] rounded-3xl overflow-hidden flex flex-col h-68 border border-[#1f2d40]/40 shadow-lg">
+        <div className="flex-1 flex flex-col px-6 pt-5">
           {/* Big number */}
           <h3 className="text-[2rem] font-extrabold text-white tracking-tight leading-none">
             8,562
@@ -292,16 +265,16 @@ export default function Cards() {
           {/* Legend + Donut Chart row */}
           <div className="flex-1 flex items-center justify-between gap-4 mt-2">
             {/* Left: Legend */}
-            <div className="flex flex-col gap-1.75 min-w-0">
+            <div className="flex flex-col gap-3 min-w-0">
               <div className="flex items-start gap-2">
                 <span className="mt-1 w-2.5 h-2.5 rounded-full bg-[#fd5c28] shrink-0" />
-                <span className="text-[18px] font-bold text-white leading-snug">
+                <span className="text-[11px] font-bold text-white leading-snug">
                   Total Report - 8562
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00897b] shrink-0" />
-                <span className="text-[14px] font-semibold text-white">
+                <span className="text-[11px] font-semibold text-[#8f9cae]">
                   Today - 124
                 </span>
               </div>
@@ -322,8 +295,8 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-3 mb-5 shrink-0 shadow-sm">
-            <span className="w-6 h-6 rounded-lg bg-[#9A670B] flex items-center justify-center text-white shrink-0">
+          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-1.5 px-3 w-fit mb-3">
+            <span className="w-6 h-6 rounded-lg bg-[#e65100] flex items-center justify-center text-white shrink-0">
               <FiFileText className="w-3.5 h-3.5" />
             </span>
             <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
@@ -333,7 +306,7 @@ export default function Cards() {
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="bg-[#e65100] px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
           <span>Report submitted</span>
           <span className="flex items-center gap-1 bg-white/10 py-0.5 px-2 rounded-full">
             ↗ +124 today
@@ -342,15 +315,15 @@ export default function Cards() {
       </div>
 
       {/* ── CARD 4: Total Revenue (Rounded Bars) ── */}
-      <div className="bg-[#bf360c] rounded-3xl overflow-hidden flex flex-col h-68.5 shadow-lg">
-        <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
+      <div className="bg-[#19304A] rounded-3xl overflow-hidden flex flex-col h-68 border border-[#1f2d40]/40 shadow-lg">
+        <div className="flex-1 flex flex-col px-6 pt-5">
           {/* Big number */}
           <h3 className="text-[2rem] font-extrabold text-white tracking-tight leading-none">
             $2,000
           </h3>
 
           {/* Bar Chart – fills remaining space */}
-          <div className="flex-1 -mx-2 h-20">
+          <div className="flex-1 -mx-2 mt-2">
             {isMounted && (
               <Chart
                 options={revenueBarOptions}
@@ -363,7 +336,7 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-2 mb-2 shrink-0 shadow-sm">
+          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-1.5 px-3 w-fit mb-3">
             <span className="w-6 h-6 rounded-lg bg-[#bf360c] flex items-center justify-center text-white shrink-0">
               <FiDollarSign className="w-3.5 h-3.5" />
             </span>
@@ -374,7 +347,7 @@ export default function Cards() {
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="bg-[#bf360c] px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
           <span>This month</span>
           <span className="font-extrabold text-sm">$ 892</span>
         </div>

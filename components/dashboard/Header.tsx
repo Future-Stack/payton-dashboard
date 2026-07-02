@@ -11,8 +11,13 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <header
-      className="h-20 bg-[#0d131f]/95 backdrop-blur-sm border-b border-[#1f2d40]/40
+      className="h-20 
                  flex items-center justify-between px-4 md:px-8 fixed top-0 right-0 left-0 lg:left-64 z-20"
+      style={{
+        borderLeft: "1px solid rgba(255, 255, 255, 0.20)",
+        background: "rgba(48, 48, 48, 0.22)",
+        backdropFilter: "blur(39.5px)",
+      }}
     >
       {/* ── Left: Hamburger (mobile only) + Search Bar ── */}
       <div className="flex items-center gap-3 flex-1 max-w-104">
@@ -35,11 +40,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
             id="dashboard-search"
             type="text"
             placeholder="Search"
-            className="w-full bg-[#1b2336] text-white placeholder-[#7a8a9e]
+            className="w-full   text-white placeholder-[#7a8a9e]
                        pl-11 pr-4 py-2.5 rounded-full text-sm font-medium
                        border border-[#1f2d40]/60
                        focus:border-[#ff6b35]/50 focus:outline-none focus:ring-1 focus:ring-[#ff6b35]/20
                        transition-all"
+            style={{
+              borderRadius: "40px",
+              background: "rgba(255, 255, 255, 0.20)",
+            }}
           />
         </div>
       </div>

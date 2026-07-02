@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiUsers, FiFileText, FiSettings, FiLogOut, FiX } from "react-icons/fi";
+import {
+  FiGrid,
+  FiUsers,
+  FiFileText,
+  FiSettings,
+  FiLogOut,
+  FiX,
+} from "react-icons/fi";
 import { BiWalletAlt } from "react-icons/bi";
 
 interface SidebarProps {
@@ -43,7 +50,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   ];
 
   const sidebarContent = (
-    <aside className="w-64 bg-[#141b2d] border-r border-[#1f293d]/50 flex flex-col justify-between h-full py-6 px-4">
+    <aside
+      className="w-64   border-r border-[#1f293d]/50 flex flex-col justify-between h-full py-6 px-4"
+      style={{
+        background: "rgba(48, 48, 48, 0.22)",
+        backdropFilter: "blur(39.5px)",
+      }}
+    >
       {/* Top Section: Logo & Nav Links */}
       <div className="flex flex-col gap-8">
         {/* Logo Container */}
@@ -80,7 +93,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             const isActive =
               item.path === "/dashboard"
                 ? pathname === "/dashboard"
-                : pathname === item.path || pathname.startsWith(item.path + "/");
+                : pathname === item.path ||
+                  pathname.startsWith(item.path + "/");
 
             return (
               <Link
@@ -93,7 +107,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     : "text-[#94a3b8] hover:text-white hover:bg-[#1a233a]/50"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-[#94a3b8]"}`} />
+                <Icon
+                  className={`w-5 h-5 ${isActive ? "text-white" : "text-[#94a3b8]"}`}
+                />
                 <span>{item.name}</span>
               </Link>
             );
@@ -125,7 +141,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Backdrop */}
       <div
         className={`lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
         aria-hidden="true"
@@ -142,4 +160,3 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     </>
   );
 }
-

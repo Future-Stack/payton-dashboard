@@ -12,7 +12,12 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#0d131f] text-slate-100 flex font-sans">
+    <div
+      className="min-h-screen text-slate-100 flex font-sans"
+      style={{
+        background: "linear-gradient(180deg, #0A1628 0%, #284A6C 100%)",
+      }}
+    >
       {/* Sidebar - fixed left (desktop) / offcanvas (mobile) */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
