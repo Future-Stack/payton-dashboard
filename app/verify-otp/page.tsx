@@ -40,14 +40,14 @@ export default function VerifyOTP() {
         background: "linear-gradient(180deg, #0A1628 0%, #284A6C 100%)",
       }}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[440px] p-10 animate-fade-in">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-110 p-10 animate-fade-in">
         <div className="flex flex-col items-center mb-6">
           <Image
             src="/logo.png"
             alt="On The Bite Logo"
             width={120}
             height={80}
-            className="object-contain h-[70px] w-auto mb-4"
+            className="object-contain h-17.5 w-auto mb-4"
             priority
           />
           <h1 className="text-2xl font-bold text-[#0A1628] mb-3">Verify OTP</h1>
@@ -75,7 +75,7 @@ export default function VerifyOTP() {
                 <input
                   {...props}
                   style={{}} // override default style if needed
-                  className="!w-10 !h-10 sm:!w-12 sm:!h-12 text-center text-lg font-semibold text-gray-800 border border-dashed border-[#FF6A3D]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6A3D]/40 focus:border-[#FF6A3D] transition-all bg-white"
+                  className="w-10! h-10! sm:w-12! sm:h-12! text-center text-lg font-semibold text-gray-800 border border-dashed border-[#FF6A3D]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6A3D]/40 focus:border-[#FF6A3D] transition-all bg-white"
                 />
               )}
               containerStyle="flex justify-center w-full"

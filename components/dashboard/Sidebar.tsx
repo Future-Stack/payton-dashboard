@@ -60,7 +60,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Top Section: Logo & Nav Links */}
       <div className="flex flex-col gap-8">
         {/* Logo Container */}
-        <div className="flex justify-between items-center py-2">
+        <div className="flex justify-between md:justify-center items-center py-2">
           <Link
             href="/dashboard"
             className="relative block h-20 w-32 transition-transform hover:scale-105"
@@ -101,9 +101,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 key={item.name}
                 href={item.path}
                 onClick={onClose}
-                className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium ${
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-[30px] transition-all duration-300 font-medium ${
                   isActive
-                    ? "bg-gradient-to-r from-[#ff6b35] to-[#fd5c28] text-white shadow-[0_4px_15px_rgba(253,92,40,0.35)]"
+                    ? "bg-linear-to-r from-[#ff6b35] to-[#fd5c28] text-white shadow-[0_4px_15px_rgba(253,92,40,0.35)]"
                     : "text-[#94a3b8] hover:text-white hover:bg-[#1a233a]/50"
                 }`}
               >
