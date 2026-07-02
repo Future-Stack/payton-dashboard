@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   FiSearch,
   FiFilter,
   FiChevronLeft,
   FiChevronRight,
+  FiX,
 } from "react-icons/fi";
+import { TbRipple, TbMapPin, TbAnchor, TbFish } from "react-icons/tb";
 import ReportCard, { type Report } from "@/components/report/ReportCard";
 
 /* ─────────────────── Mock Data ─────────────────── */
@@ -152,15 +155,60 @@ const ALL_REPORTS: Report[] = [
 const ITEMS_PER_PAGE = 5;
 
 type FilterTab = "All" | "Approved" | "Removed";
+type ReportStatus = "All" | "approved" | "tagged";
+type FlagCount = "All" | "Low (<3)" | "High (3+)";
+
+type FilterState = {
+  status: ReportStatus;
+  species: string;
+  flagCount: FlagCount;
+};
 
 export default function ReportPageClient() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterSpecies, setFilterSpecies] = useState<string>("All");
+  const [filterState, setFilterState] = useState<FilterState>({
+    status: "All",
+    species: "All",
+    flagCount: "All",
+  });
+  const [localFilter, setLocalFilter] = useState<FilterState>(filterState);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
   const [removedIds, setRemovedIds] = useState<Set<number>>(new Set());
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (selectedReport) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [selectedReport]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(event.target as Node)
+      ) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /* ── Species list for filter ── */
   const speciesList = useMemo(() => {
@@ -181,7 +229,15 @@ export default function ReportPageClient() {
         r.grid.toLowerCase().includes(q);
 
       const matchSpecies =
-        filterSpecies === "All" || r.species === filterSpecies;
+        filterState.species === "All" || r.species === filterState.species;
+
+      const matchStatus =
+        filterState.status === "All" || r.status === filterState.status;
+
+      const flags = r.flagCount || 0;
+      let matchFlags = true;
+      if (filterState.flagCount === "Low (<3)") matchFlags = flags < 3;
+      else if (filterState.flagCount === "High (3+)") matchFlags = flags >= 3;
 
       const matchTab =
         activeTab === "All"
@@ -190,9 +246,11 @@ export default function ReportPageClient() {
             ? r.status === "approved"
             : removedIds.has(r.id); // "Removed" tab shows removed items
 
-      return matchSearch && matchSpecies && matchTab;
+      return (
+        matchSearch && matchSpecies && matchStatus && matchFlags && matchTab
+      );
     });
-  }, [search, activeTab, filterSpecies, deletedIds, removedIds]);
+  }, [search, activeTab, filterState, deletedIds, removedIds]);
 
   /* ── Pagination ── */
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -216,6 +274,17 @@ export default function ReportPageClient() {
     setDeletedIds((prev) => new Set(prev).add(id));
     setRemovedIds((prev) => new Set(prev).add(id));
   }
+
+  function applyFilter() {
+    setFilterState(localFilter);
+    setFilterOpen(false);
+    setCurrentPage(1);
+  }
+
+  const activeFiltersCount =
+    (filterState.status !== "All" ? 1 : 0) +
+    (filterState.species !== "All" ? 1 : 0) +
+    (filterState.flagCount !== "All" ? 1 : 0);
 
   /* ── Page numbers with ellipsis ── */
   function getPageNumbers() {
@@ -242,68 +311,133 @@ export default function ReportPageClient() {
         <div className="relative flex-1">
           <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7a8a9e] w-4 h-4 pointer-events-none" />
           <input
-            id="report-search"
+            id="user-search"
             type="text"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search users by name or email..."
-            className="
-              w-full bg-[#182235] border border-[#1f2d40]/60
-              text-white placeholder-[#7a8a9e]
-              pl-11 pr-4 py-3 rounded-xl text-sm font-medium
-              focus:outline-none focus:border-[#0a9396]/50 focus:ring-1 focus:ring-[#0a9396]/20
-              transition-all
-            "
+            className="w-full bg-[#19304A] border border-[#525D6D] text-white placeholder-[#7a8a9e]
+                       pl-11 pr-4 py-3 rounded-2xl text-sm font-medium
+                       focus:outline-none focus:border-[#ff6b35]/50 focus:ring-1 focus:ring-[#ff6b35]/20
+                       transition-all"
           />
         </div>
 
-        {/* Filter Dropdown */}
-        <div className="relative">
+        {/* Filter Button + Dropdown */}
+        <div className="relative" ref={filterMenuRef}>
           <button
-            id="report-filter-btn"
-            onClick={() => setFilterOpen((p) => !p)}
-            className="
-              flex items-center gap-2 bg-[#0a9396] hover:bg-[#0b8285]
-              text-white px-5 py-3 rounded-xl text-sm font-semibold
-              transition-all duration-200 hover:scale-[1.02] active:scale-95
-              shadow-lg shadow-cyan-900/20
-            "
+            id="user-filter-btn"
+            onClick={() => {
+              if (!filterOpen) setLocalFilter(filterState);
+              setFilterOpen((p) => !p);
+            }}
+            className="flex items-center gap-2 bg-[#117A88] hover:bg-[#117A88]/50 text-white
+                       px-5 py-3 rounded-2xl text-sm font-semibold border border-[#525D6D]
+                       transition-all duration-200 hover:scale-[1.02] active:scale-95
+                       shadow-lg shadow-orange-900/20 cursor-pointer"
           >
             <FiFilter className="w-4 h-4" />
             <span className="hidden sm:inline">Filter</span>
-            {filterSpecies !== "All" && (
+            {activeFiltersCount > 0 && (
               <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                1
+                {activeFiltersCount}
               </span>
             )}
           </button>
 
+          {/* Serarch filter dropdown  */}
           {filterOpen && (
-            <div className="absolute right-0 top-12 z-50 w-44 bg-[#1a2540] border border-[#2a3a58] rounded-xl shadow-2xl shadow-black/40 overflow-hidden animate-dropdown">
-              {speciesList.map((sp) => (
+            <div className="absolute right-0 top-12 z-50 w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-5 flex flex-col gap-4">
+              {/* Report Status */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">
+                  Report Status
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["All", "approved", "tagged"] as ReportStatus[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({
+                            ...p,
+                            status: opt,
+                          }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center capitalize ${
+                          localFilter.status === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Flag Count */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">
+                  Flag Count
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["All", "Low (<3)", "High (3+)"] as FlagCount[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({ ...p, flagCount: opt }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                          localFilter.flagCount === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Species */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">Species</span>
+                <div className="relative">
+                  <select
+                    value={localFilter.species}
+                    onChange={(e) =>
+                      setLocalFilter((p) => ({ ...p, species: e.target.value }))
+                    }
+                    className="w-full bg-[#2a3143] border border-[#393e46] text-white py-2 px-3 rounded-lg text-sm font-medium appearance-none focus:outline-none focus:border-[#117A88]"
+                  >
+                    {speciesList.map((species) => (
+                      <option key={species} value={species}>
+                        {species}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <button
-                  key={sp}
-                  onClick={() => {
-                    setFilterSpecies(sp);
-                    setFilterOpen(false);
-                    setCurrentPage(1);
-                  }}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                    filterSpecies === sp
-                      ? "bg-[#0a9396]/20 text-[#0a9396]"
-                      : "text-slate-300 hover:bg-[#243050] hover:text-white"
-                  }`}
+                  onClick={applyFilter}
+                  className="bg-[#ff6b35] hover:bg-[#ff6b35]/90 text-white py-2 px-6 rounded-lg text-sm font-semibold transition-colors"
                 >
-                  {sp}
+                  Filter
                 </button>
-              ))}
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {/* ── Reports Panel ── */}
-      <div className="bg-[#0e1929]/70 border border-[#1a2d45]/50 rounded-2xl p-5 flex flex-col gap-4">
+      <div className="bg-[#19304A] border border-[#223C59] rounded-[20px] p-5 flex flex-col gap-4">
         {/* ── Tab Filters ── */}
         <div className="flex items-center gap-2 flex-wrap">
           {tabs.map((tab) => (
@@ -343,6 +477,7 @@ export default function ReportPageClient() {
                 key={report.id}
                 report={report}
                 onDelete={handleDelete}
+                onViewDetails={(report) => setSelectedReport(report)}
               />
             ))}
           </div>
@@ -364,7 +499,7 @@ export default function ReportPageClient() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
               className="
-                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[#7a8a9e]
+                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                 hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                 transition-all
               "
@@ -405,7 +540,7 @@ export default function ReportPageClient() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
               className="
-                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[#7a8a9e]
+                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                 hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                 transition-all
               "
@@ -416,6 +551,132 @@ export default function ReportPageClient() {
           </div>
         )}
       </div>
+
+      {/* ── Modal Overlay ── */}
+      {mounted &&
+        selectedReport &&
+        createPortal(
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-hidden animate-fade-in">
+            {/* Modal Container */}
+            <div className="bg-[#1C2028] w-full max-w-110 rounded-2xl shadow-2xl shadow-black/50 border border-[#2A303C] flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-[#2A303C] shrink-0">
+                <h2 className="text-xl font-bold text-white">Report Details</h2>
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[#2A303C] hover:bg-[#343B4A] text-gray-400 transition-colors cursor-pointer"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 flex flex-col gap-6 flex-1 overflow-y-auto custom-scrollbar">
+                {/* Report Information Container */}
+                <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-semibold text-lg">
+                      Report Information
+                    </h3>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#10B981]/10 rounded-md border border-[#10B981]/20">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></div>
+                      <span className="text-xs text-[#10B981] font-medium">
+                        Online
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <span className="text-[#8B95A5] text-sm">User</span>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.username}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <span className="text-[#8B95A5] text-sm">Grid</span>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.grid}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <span className="text-[#8B95A5] text-sm">Species</span>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.species}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <span className="text-[#8B95A5] text-sm">Status</span>
+                      <span
+                        className={`text-sm font-bold uppercase ${
+                          selectedReport.status === "approved"
+                            ? "text-[#10B981]"
+                            : selectedReport.status === "tagged"
+                              ? "text-[#FF6B35]"
+                              : "text-[#3B82F6]"
+                        }`}
+                      >
+                        {selectedReport.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <span className="text-[#8B95A5] text-sm">Flags</span>
+                      <span className="text-white text-sm font-bold">
+                        {selectedReport.flagCount || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fishing Details Container */}
+                <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
+                  <h3 className="text-white font-semibold text-lg mb-4">
+                    Fishing Details
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-cyan-400">
+                        <TbRipple className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Depth</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        120 ft
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-blue-400">
+                        <TbMapPin className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Position</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        Suspended
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-indigo-400">
+                        <TbAnchor className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Method</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        Trolling
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-teal-400">
+                        <TbFish className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Bait</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        Ballyhoo
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

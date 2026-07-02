@@ -145,12 +145,13 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <div
       className={`
-        relative rounded-xl p-5 sm:p-6 transition-all duration-300
+        relative rounded-2xl p-5 sm:p-6 transition-all duration-300
         ${
           isPro
-            ? "bg-[#1e1408] border border-[#ff6b35]/25 shadow-lg shadow-[#ff6b35]/5"
-            : "bg-[#0e1929]/80 border border-[#1a2d45]/60"
-        }
+            ? "bg-[#393331] border border-[#FF6B354D]/60"
+            : "bg-[#1E3A5A] border border-[#47596E]"
+        }  
+ 
       `}
     >
       {/* Top Row: Name + Price */}
@@ -160,7 +161,7 @@ function PlanCard({ plan }: { plan: Plan }) {
           {plan.badge && (
             <div className="flex items-center gap-2 flex-wrap">
               <RiVipCrownLine
-                className={`w-[18px] h-[18px] shrink-0 ${
+                className={`w-4.5 h-4.5 shrink-0 ${
                   plan.badge.color === "orange"
                     ? "text-[#ff6b35]"
                     : "text-[#0a9396]"
@@ -203,7 +204,7 @@ function PlanCard({ plan }: { plan: Plan }) {
 
 function PlanSection({ title, plans }: { title: string; plans: Plan[] }) {
   return (
-    <section className="bg-[#0e1929]/40 border border-[#1a2d45]/50 rounded-2xl p-5 sm:p-6 flex flex-col gap-4">
+    <section className="bg-[#19304A] border border-[#40638C] rounded-[20px] p-5 sm:p-6 flex flex-col gap-4">
       <h2 className="text-base font-bold text-white">{title}</h2>
       <div className="flex flex-col gap-4">
         {plans.map((plan) => (

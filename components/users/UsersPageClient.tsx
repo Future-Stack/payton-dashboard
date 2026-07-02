@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   FiSearch,
   FiFilter,
   FiChevronLeft,
   FiChevronRight,
+  FiX,
 } from "react-icons/fi";
 import UserCard, { type User } from "@/components/users/UserCard";
+import Image from "next/image";
 
 /* ─────────────────── Mock Data ─────────────────── */
 const ALL_USERS: User[] = [
@@ -19,6 +22,7 @@ const ALL_USERS: User[] = [
     reports: 42,
     lastActive: "2 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 2,
@@ -27,6 +31,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 18,
     lastActive: "5 hours ago",
+    avater: "/avater.png",
   },
   {
     id: 3,
@@ -36,6 +41,7 @@ const ALL_USERS: User[] = [
     reports: 127,
     lastActive: "1 day ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 4,
@@ -45,6 +51,7 @@ const ALL_USERS: User[] = [
     reports: 8,
     lastActive: "3 days ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 5,
@@ -53,7 +60,9 @@ const ALL_USERS: User[] = [
     accessLevel: "PRO",
     reports: 64,
     lastActive: "1 hour ago",
+
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 6,
@@ -62,6 +71,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 5,
     lastActive: "1 week ago",
+    avater: "/avater.png",
   },
   {
     id: 7,
@@ -71,6 +81,7 @@ const ALL_USERS: User[] = [
     reports: 91,
     lastActive: "30 mins ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 8,
@@ -79,6 +90,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 22,
     lastActive: "2 days ago",
+    avater: "/avater.png",
   },
   {
     id: 9,
@@ -88,6 +100,7 @@ const ALL_USERS: User[] = [
     reports: 55,
     lastActive: "4 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 10,
@@ -96,6 +109,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 3,
     lastActive: "2 weeks ago",
+    avater: "/avater.png",
   },
   {
     id: 11,
@@ -105,6 +119,7 @@ const ALL_USERS: User[] = [
     reports: 210,
     lastActive: "Just now",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 12,
@@ -113,6 +128,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 14,
     lastActive: "6 hours ago",
+    avater: "/avater.png",
   },
   {
     id: 13,
@@ -122,6 +138,7 @@ const ALL_USERS: User[] = [
     reports: 77,
     lastActive: "2 days ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 14,
@@ -130,6 +147,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 9,
     lastActive: "5 days ago",
+    avater: "/avater.png",
   },
   {
     id: 15,
@@ -139,6 +157,7 @@ const ALL_USERS: User[] = [
     reports: 33,
     lastActive: "3 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 16,
@@ -147,6 +166,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 11,
     lastActive: "1 day ago",
+    avater: "/avater.png",
   },
   {
     id: 17,
@@ -156,6 +176,7 @@ const ALL_USERS: User[] = [
     reports: 88,
     lastActive: "45 mins ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 18,
@@ -164,6 +185,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 2,
     lastActive: "3 weeks ago",
+    avater: "/avater.png",
   },
   {
     id: 19,
@@ -173,6 +195,7 @@ const ALL_USERS: User[] = [
     reports: 149,
     lastActive: "1 hour ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 20,
@@ -181,6 +204,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 7,
     lastActive: "4 days ago",
+    avater: "/avater.png",
   },
   {
     id: 21,
@@ -190,6 +214,7 @@ const ALL_USERS: User[] = [
     reports: 60,
     lastActive: "2 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 22,
@@ -198,6 +223,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 20,
     lastActive: "6 days ago",
+    avater: "/avater.png",
   },
   {
     id: 23,
@@ -207,6 +233,7 @@ const ALL_USERS: User[] = [
     reports: 102,
     lastActive: "Just now",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 24,
@@ -215,6 +242,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 16,
     lastActive: "1 week ago",
+    avater: "/avater.png",
   },
   {
     id: 25,
@@ -224,6 +252,7 @@ const ALL_USERS: User[] = [
     reports: 200,
     lastActive: "3 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 26,
@@ -232,6 +261,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 4,
     lastActive: "2 weeks ago",
+    avater: "/avater.png",
   },
   {
     id: 27,
@@ -241,6 +271,7 @@ const ALL_USERS: User[] = [
     reports: 38,
     lastActive: "5 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 28,
@@ -249,6 +280,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 12,
     lastActive: "3 days ago",
+    avater: "/avater.png",
   },
   {
     id: 29,
@@ -258,6 +290,7 @@ const ALL_USERS: User[] = [
     reports: 74,
     lastActive: "1 day ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 30,
@@ -266,6 +299,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 6,
     lastActive: "1 month ago",
+    avater: "/avater.png",
   },
   {
     id: 31,
@@ -275,6 +309,7 @@ const ALL_USERS: User[] = [
     reports: 93,
     lastActive: "2 hours ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 32,
@@ -283,6 +318,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 28,
     lastActive: "4 hours ago",
+    avater: "/avater.png",
   },
   {
     id: 33,
@@ -292,6 +328,7 @@ const ALL_USERS: User[] = [
     reports: 115,
     lastActive: "30 mins ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 34,
@@ -300,6 +337,7 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 1,
     lastActive: "2 months ago",
+    avater: "/avater.png",
   },
   {
     id: 35,
@@ -309,6 +347,7 @@ const ALL_USERS: User[] = [
     reports: 49,
     lastActive: "1 hour ago",
     verified: true,
+    avater: "/avater.png",
   },
   {
     id: 36,
@@ -317,18 +356,66 @@ const ALL_USERS: User[] = [
     accessLevel: "FREE",
     reports: 17,
     lastActive: "2 days ago",
+    avater: "/avater.png",
   },
 ];
 
 const ITEMS_PER_PAGE = 5;
 
-type FilterOption = "ALL" | "PRO" | "FREE";
+type SubscriptionLevel = "All" | "Free" | "Pro";
+type AccountStatus = "All" | "Active" | "Blocked";
+type ReportCount = "All" | "Low (< 20)" | "Medium (20-49)" | "High (50+)";
+
+type FilterState = {
+  subscriptionLevel: SubscriptionLevel;
+  accountStatus: AccountStatus;
+  reportCount: ReportCount;
+};
 
 export default function UsersPageClient() {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<FilterOption>("ALL");
+  const [filterState, setFilterState] = useState<FilterState>({
+    subscriptionLevel: "All",
+    accountStatus: "All",
+    reportCount: "All",
+  });
+  const [localFilter, setLocalFilter] = useState<FilterState>(filterState);
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (selectedUser) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [selectedUser]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(event.target as Node)
+      ) {
+        setFilterOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /* ── Filtered + Searched users ── */
   const filtered = useMemo(() => {
@@ -338,10 +425,29 @@ export default function UsersPageClient() {
         !q ||
         u.username.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q);
-      const matchFilter = filter === "ALL" || u.accessLevel === filter;
-      return matchSearch && matchFilter;
+
+      const sub = filterState.subscriptionLevel;
+      const matchSub =
+        sub === "All" ||
+        (sub === "Pro" && u.accessLevel === "PRO") ||
+        (sub === "Free" && u.accessLevel === "FREE");
+
+      const acc = filterState.accountStatus;
+      const matchAcc =
+        acc === "All" ||
+        (acc === "Active" && u.verified) ||
+        (acc === "Blocked" && !u.verified);
+
+      const rep = filterState.reportCount;
+      let matchRep = true;
+      if (rep === "Low (< 20)") matchRep = u.reports < 20;
+      else if (rep === "Medium (20-49)")
+        matchRep = u.reports >= 20 && u.reports <= 49;
+      else if (rep === "High (50+)") matchRep = u.reports >= 50;
+
+      return matchSearch && matchSub && matchAcc && matchRep;
     });
-  }, [search, filter]);
+  }, [search, filterState]);
 
   /* ── Pagination ── */
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -356,11 +462,16 @@ export default function UsersPageClient() {
     setCurrentPage(1);
   }
 
-  function handleFilterChange(val: FilterOption) {
-    setFilter(val);
+  function applyFilter() {
+    setFilterState(localFilter);
     setFilterOpen(false);
     setCurrentPage(1);
   }
+
+  const activeFiltersCount =
+    (filterState.subscriptionLevel !== "All" ? 1 : 0) +
+    (filterState.accountStatus !== "All" ? 1 : 0) +
+    (filterState.reportCount !== "All" ? 1 : 0);
 
   /* ── Pagination page numbers (with ellipsis) ── */
   function getPageNumbers() {
@@ -378,7 +489,7 @@ export default function UsersPageClient() {
   }
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-full mx-auto animate-fade-in">
+    <div className="relative flex flex-col gap-5 w-full max-w-full mx-auto animate-fade-in">
       {/* ── Search + Filter Bar ── */}
       <div className="flex items-center gap-3 w-full">
         {/* Search Input */}
@@ -390,58 +501,176 @@ export default function UsersPageClient() {
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search users by name or email..."
-            className="w-full bg-[#182235] border border-[#1f2d40]/60 text-white placeholder-[#7a8a9e]
-                       pl-11 pr-4 py-3 rounded-xl text-sm font-medium
+            className="w-full bg-[#19304A] border border-[#525D6D] text-white placeholder-[#7a8a9e]
+                       pl-11 pr-4 py-3 rounded-2xl text-sm font-medium
                        focus:outline-none focus:border-[#ff6b35]/50 focus:ring-1 focus:ring-[#ff6b35]/20
                        transition-all"
           />
         </div>
 
         {/* Filter Button + Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={filterMenuRef}>
           <button
             id="user-filter-btn"
-            onClick={() => setFilterOpen((p) => !p)}
-            className="flex items-center gap-2 bg-[#ff6b35] hover:bg-[#fd5c28] text-white
-                       px-5 py-3 rounded-xl text-sm font-semibold
+            onClick={() => {
+              if (!filterOpen) setLocalFilter(filterState);
+              setFilterOpen((p) => !p);
+            }}
+            className="flex items-center gap-2 bg-[#117A88] hover:bg-[#117A88]/50 text-white
+                       px-5 py-3 rounded-2xl text-sm font-semibold border border-[#525D6D]
                        transition-all duration-200 hover:scale-[1.02] active:scale-95
-                       shadow-lg shadow-orange-900/20"
+                       shadow-lg shadow-orange-900/20 cursor-pointer"
           >
             <FiFilter className="w-4 h-4" />
             <span className="hidden sm:inline">Filter</span>
-            {filter !== "ALL" && (
+            {activeFiltersCount > 0 && (
               <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {filter}
+                {activeFiltersCount}
               </span>
             )}
           </button>
 
+          {/* Serarch filter dropdown  */}
           {filterOpen && (
-            <div className="absolute right-0 top-12 z-50 w-40 bg-[#1a2540] border border-[#2a3a58] rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
-              {(["ALL", "PRO", "FREE"] as FilterOption[]).map((opt) => (
+            <div className="absolute right-0 top-12 z-50 w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-5 flex flex-col gap-4">
+              {/* Subscription Level */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">
+                  Subscription Level
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["All", "Free", "Pro"] as SubscriptionLevel[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({
+                            ...p,
+                            subscriptionLevel: opt,
+                          }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                          localFilter.subscriptionLevel === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Account Status */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">
+                  Account Status
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["All", "Active", "Blocked"] as AccountStatus[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({ ...p, accountStatus: opt }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                          localFilter.accountStatus === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              {/* Report Count */}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">
+                  Report Count
+                </span>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <button
+                    onClick={() =>
+                      setLocalFilter((p) => ({ ...p, reportCount: "All" }))
+                    }
+                    className={`col-span-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "All"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "Low (< 20)",
+                      }))
+                    }
+                    className={`col-span-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "Low (< 20)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
+                  >
+                    Low (&lt; 20)
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "Medium (20-49)",
+                      }))
+                    }
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "Medium (20-49)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
+                  >
+                    Medium (20-49)
+                  </button>
+                  <button
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "High (50+)",
+                      }))
+                    }
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "High (50+)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
+                  >
+                    High (50+)
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <button
-                  key={opt}
-                  onClick={() => handleFilterChange(opt)}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                    filter === opt
-                      ? "bg-[#ff6b35]/20 text-[#ff6b35]"
-                      : "text-slate-300 hover:bg-[#243050] hover:text-white"
-                  }`}
+                  onClick={applyFilter}
+                  className="bg-[#ff6b35] hover:bg-[#ff6b35]/90 text-white py-2 px-6 rounded-lg text-sm font-semibold transition-colors"
                 >
-                  {opt === "ALL"
-                    ? "All Users"
-                    : opt === "PRO"
-                      ? "PRO Users"
-                      : "FREE Users"}
+                  Filter
                 </button>
-              ))}
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {/* ── Users List Panel ── */}
-      <div className="bg-[#0f1929]/60 border border-[#1f2d40]/50 rounded-2xl p-5 flex flex-col gap-4">
+      <div className="bg-[#19304A] border border-[#223C59] rounded-[20px] p-5 flex flex-col gap-4">
         {/* Header: Total count */}
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-white">
@@ -451,12 +680,15 @@ export default function UsersPageClient() {
             </span>
           </h2>
         </div>
-
         {/* User Cards */}
         {paginated.length > 0 ? (
           <div className="flex flex-col gap-3">
             {paginated.map((user) => (
-              <UserCard key={user.id} user={user} />
+              <UserCard
+                key={user.id}
+                user={user}
+                onViewDetails={() => setSelectedUser(user)}
+              />
             ))}
           </div>
         ) : (
@@ -468,15 +700,15 @@ export default function UsersPageClient() {
             </p>
           </div>
         )}
-
         {/* ── Pagination ── */}
+
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 pt-4 border-t border-[#1f2d40]/40 flex-wrap">
             {/* Previous */}
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[#7a8a9e]
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                          hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                          transition-all"
             >
@@ -497,9 +729,9 @@ export default function UsersPageClient() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p as number)}
-                  className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+                  className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${
                     safePage === p
-                      ? "bg-[#ff6b35] text-white shadow-md shadow-orange-900/30"
+                      ? "bg-[#D9ECFF] text-black shadow-md shadow-orange-900/30 border border-[#E4E4E7]"
                       : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60"
                   }`}
                 >
@@ -512,7 +744,7 @@ export default function UsersPageClient() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-[#7a8a9e]
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                          hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                          transition-all"
             >
@@ -522,6 +754,89 @@ export default function UsersPageClient() {
           </div>
         )}
       </div>
+
+      {/* ── User Details Modal ── */}
+      {mounted &&
+        selectedUser &&
+        createPortal(
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-[#1e2330]/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#242b38] w-full max-w-md rounded-2xl border border-[#393e46] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex items-center justify-between p-5 border-b border-[#393e46] shrink-0">
+                <h3 className="text-lg font-bold text-white">User Details</h3>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[#303846] text-[#7a8a9e] hover:text-white hover:bg-[#3d4759] transition-colors"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex items-center gap-4 mb-8">
+                  {selectedUser?.avater ? (
+                    <Image
+                      src={"/avater.png"}
+                      alt="Avatar"
+                      width={60}
+                      height={60}
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-2xl shrink-0 border-2 border-[#2a3a58]">
+                      {selectedUser.username
+                        .replace(/[^a-zA-Z]/g, "")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <h4 className="text-xl font-bold text-white">
+                      {selectedUser.username}
+                    </h4>
+                    <p className="text-[#7a8a9e] text-sm">
+                      {selectedUser.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-6">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">Status</span>
+                    <span
+                      className={`text-sm font-semibold uppercase ${selectedUser.verified !== false ? "text-[#00d287]" : "text-red-400"}`}
+                    >
+                      {selectedUser.verified !== false ? "ACTIVE" : "BLOCKED"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">Access Level</span>
+                    <span
+                      className={`text-sm font-semibold uppercase ${selectedUser.accessLevel === "PRO" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}
+                    >
+                      {selectedUser.accessLevel}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">Join Date</span>
+                    <span className="text-sm font-semibold text-white">
+                      2025-01-15
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">
+                      Total Reports
+                    </span>
+                    <span className="text-sm font-semibold text-white">
+                      {selectedUser.reports}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
