@@ -145,20 +145,20 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-2 mb-2 shrink-0 shadow-sm">
+          <div className="flex items-center gap-2  rounded-xl py-2 px-4 w-fit mt-2 mb-2 shrink-0 shadow-sm">
             <span className="w-6 h-6 rounded-lg bg-[#ff6b35] flex items-center justify-center text-white shrink-0">
               <FiUsers className="w-3.5 h-3.5" />
             </span>
-            <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
+            <span className="text-sm font-normal text-slate-200 whitespace-nowrap">
               Total Users
             </span>
           </div>
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="px-5 py-1 flex justify-between items-center text-white text-sm font-normal tracking-wide shrink-0">
           <span>Total users increase rate</span>
-          <span className="flex items-center gap-1 bg-white/10 py-0.5 px-2 rounded-full">
+          <span className="flex items-center gap-1 bg-white/10  px-2 rounded-full">
             ↗ +42 this week
           </span>
         </div>
@@ -255,15 +255,15 @@ export default function Cards() {
             <span className="w-8 h-8 rounded-xl bg-[#00897b] flex items-center justify-center text-white shrink-0">
               <FaCrown className="w-5 h-5" />
             </span>
-            <span className="text-[14px] font-normal text-white whitespace-nowrap">
+            <span className="text-sm font-normal text-white whitespace-nowrap">
               Pro Users
             </span>
           </div>
         </div>
         {/* bottom banner  */}
-        <div className="px-5 py-2 flex justify-between items-center text-white text-[12px] font-normal tracking-wide shrink-0">
+        <div className="px-5 py-1 flex justify-between items-center text-white text-sm font-normal tracking-wide shrink-0">
           <span>Total pro users increase rate</span>
-          <span className="flex items-center gap-1 font-semibold">
+          <span className="flex items-center gap-1 font-normal">
             <svg
               width="16"
               height="16"
@@ -322,20 +322,20 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-3 mb-5 shrink-0 shadow-sm">
+          <div className="flex items-center gap-2  rounded-xl py-2 px-4 w-fit mt-2 mb-3 shrink-0 shadow-sm">
             <span className="w-6 h-6 rounded-lg bg-[#9A670B] flex items-center justify-center text-white shrink-0">
               <FiFileText className="w-3.5 h-3.5" />
             </span>
-            <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
+            <span className="text-sm font-semibold text-slate-200 whitespace-nowrap">
               Total Reports
             </span>
           </div>
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="px-5 py-1 flex justify-between items-center text-white text-sm font-normal tracking-wide shrink-0">
           <span>Report submitted</span>
-          <span className="flex items-center gap-1 bg-white/10 py-0.5 px-2 rounded-full">
+          <span className="flex items-center gap-1 bg-white/10   px-2 rounded-full">
             ↗ +124 today
           </span>
         </div>
@@ -363,20 +363,20 @@ export default function Cards() {
           </div>
 
           {/* Label Pill */}
-          <div className="flex items-center gap-2 bg-[#0d131f]/60 rounded-xl py-2 px-4 w-fit mt-2 mb-2 shrink-0 shadow-sm">
+          <div className="flex items-center gap-2  rounded-xl py-2 px-4 w-fit mt-2 mb-3 shrink-0 shadow-sm">
             <span className="w-6 h-6 rounded-lg bg-[#bf360c] flex items-center justify-center text-white shrink-0">
               <FiDollarSign className="w-3.5 h-3.5" />
             </span>
-            <span className="text-[11px] font-semibold text-slate-200 whitespace-nowrap">
+            <span className="text-sm font-normal text-slate-200 whitespace-nowrap">
               Total Revenue
             </span>
           </div>
         </div>
 
         {/* Bottom Banner */}
-        <div className="px-5 py-2.5 flex justify-between items-center text-white text-[10px] font-semibold tracking-wide shrink-0">
+        <div className="px-5 py-1 flex justify-between items-center text-white text-[14px] font-normal tracking-wide shrink-0">
           <span>This month</span>
-          <span className="font-extrabold text-sm">$ 892</span>
+          <span className="font-normal text-sm">$ 892</span>
         </div>
       </div>
     </div>

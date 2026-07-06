@@ -4,10 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import OtpInput from "react-otp-input";
-import { useRouter } from "next/navigation";
 
 export default function VerifyOTP() {
-  const router = useRouter();
   const [otp, setOtp] = useState("");
   const [timeLeft, setTimeLeft] = useState(179); // 2:59 in seconds
 
@@ -21,11 +19,11 @@ export default function VerifyOTP() {
     return () => clearInterval(timerId);
   }, [timeLeft]);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
+  // const formatTime = (seconds: number) => {
+  //   const m = Math.floor(seconds / 60);
+  //   const s = seconds % 60;
+  //   return `${m}:${s < 10 ? "0" : ""}${s}`;
+  // };
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
