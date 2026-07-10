@@ -3,13 +3,57 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { authService } from "@/services/api/authService";
+import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Home() {
   const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push("/dashboard");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: (data: LoginFormValues) => authService.login(data),
+    onSuccess: (data, variables) => {
+      if (data.data?.accessToken) {
+        setAuth(data.data.accessToken, { id: 1, email: variables.email });
+        toast.success(data.message || "Login successful");
+        router.push("/dashboard");
+      } else {
+        toast.error("Invalid response from server");
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || "An error occurred during login";
+      toast.error(errorMessage);
+    },
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate(data);
   };
 
   return (
@@ -37,7 +81,7 @@ export default function Home() {
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleLogin}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label
               htmlFor="email"
@@ -49,9 +93,14 @@ export default function Home() {
               type="email"
               id="email"
               placeholder="admin@onthebite.com"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#284A6C] focus:border-transparent transition-all text-sm text-gray-800 placeholder-gray-400"
-              required
+              {...register("email")}
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#284A6C] focus:border-transparent transition-all text-sm text-gray-800 placeholder-gray-400 ${
+                errors.email ? "border-red-500" : "border-gray-200"
+              }`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -65,9 +114,14 @@ export default function Home() {
               type="password"
               id="password"
               placeholder="••••••••"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#284A6C] focus:border-transparent transition-all text-sm text-gray-800 placeholder-gray-400 tracking-widest"
-              required
+              {...register("password")}
+              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#284A6C] focus:border-transparent transition-all text-sm text-gray-800 placeholder-gray-400 tracking-widest ${
+                errors.password ? "border-red-500" : "border-gray-200"
+              }`}
             />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>
+            )}
             <div className="flex justify-end mt-1.5">
               <Link
                 href="/forgot-password"
@@ -81,9 +135,17 @@ export default function Home() {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-[#FF6A3D] hover:bg-[#E55B30] text-white text-sm font-semibold py-3 rounded-lg transition-colors"
+              disabled={loginMutation.isPending}
+              className="w-full bg-[#FF6A3D] hover:bg-[#E55B30] disabled:bg-[#FF6A3D]/70 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-lg transition-colors flex items-center justify-center"
             >
-              Log In to Admin
+              {loginMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Log In to Admin"
+              )}
             </button>
           </div>
         </form>

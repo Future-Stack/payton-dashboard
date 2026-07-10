@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 import {
   FiGrid,
   FiUsers,
@@ -20,6 +22,14 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    router.push("/");
+  };
 
   const menuItems = [
     {
@@ -120,7 +130,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Bottom Section: Log Out Button */}
       <div className="mt-auto px-2">
         <button
-          onClick={() => console.log("Logging out...")}
+          onClick={handleLogout}
           className="w-full flex items-center justify-center gap-3 bg-[#ff3b30] hover:bg-[#ff453a] active:bg-[#d02e25] text-white py-3 px-4 rounded-full font-semibold shadow-lg shadow-red-900/20 transition-all duration-300 hover:scale-[1.02]"
         >
           <FiLogOut className="w-5 h-5" />
