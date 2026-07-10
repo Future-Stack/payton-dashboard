@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   FiSearch,
@@ -9,358 +9,13 @@ import {
   FiChevronRight,
   FiX,
 } from "react-icons/fi";
-import UserCard, { type User } from "@/components/users/UserCard";
+import UserCard, { type ApiUser } from "@/components/users/UserCard";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/services/api/axios";
+import { formatDistanceToNow } from "date-fns";
 
-/* ─────────────────── Mock Data ─────────────────── */
-const ALL_USERS: User[] = [
-  {
-    id: 1,
-    username: "CaptJohn_87",
-    email: "john@example.com",
-    accessLevel: "PRO",
-    reports: 42,
-    lastActive: "2 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 2,
-    username: "DeepSeaMike",
-    email: "mike@example.com",
-    accessLevel: "FREE",
-    reports: 18,
-    lastActive: "5 hours ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 3,
-    username: "ReefRunner",
-    email: "reef@example.com",
-    accessLevel: "PRO",
-    reports: 127,
-    lastActive: "1 day ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 4,
-    username: "SpeedFisher",
-    email: "speed@example.com",
-    accessLevel: "FREE",
-    reports: 8,
-    lastActive: "3 days ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 5,
-    username: "AquaAngler",
-    email: "aqua@example.com",
-    accessLevel: "PRO",
-    reports: 64,
-    lastActive: "1 hour ago",
-
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 6,
-    username: "TidalWave99",
-    email: "tidal@example.com",
-    accessLevel: "FREE",
-    reports: 5,
-    lastActive: "1 week ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 7,
-    username: "LakeLegend",
-    email: "lake@example.com",
-    accessLevel: "PRO",
-    reports: 91,
-    lastActive: "30 mins ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 8,
-    username: "BaitMaster",
-    email: "bait@example.com",
-    accessLevel: "FREE",
-    reports: 22,
-    lastActive: "2 days ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 9,
-    username: "CoralDiver",
-    email: "coral@example.com",
-    accessLevel: "PRO",
-    reports: 55,
-    lastActive: "4 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 10,
-    username: "WaveCatcher",
-    email: "wave@example.com",
-    accessLevel: "FREE",
-    reports: 3,
-    lastActive: "2 weeks ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 11,
-    username: "FishingKing_01",
-    email: "king@example.com",
-    accessLevel: "PRO",
-    reports: 210,
-    lastActive: "Just now",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 12,
-    username: "OceanExplorer",
-    email: "ocean@example.com",
-    accessLevel: "FREE",
-    reports: 14,
-    lastActive: "6 hours ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 13,
-    username: "DeepBlueHook",
-    email: "hook@example.com",
-    accessLevel: "PRO",
-    reports: 77,
-    lastActive: "2 days ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 14,
-    username: "TroutTracker",
-    email: "trout@example.com",
-    accessLevel: "FREE",
-    reports: 9,
-    lastActive: "5 days ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 15,
-    username: "SalmonSurfer",
-    email: "salmon@example.com",
-    accessLevel: "PRO",
-    reports: 33,
-    lastActive: "3 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 16,
-    username: "MarlinHunter",
-    email: "marlin@example.com",
-    accessLevel: "FREE",
-    reports: 11,
-    lastActive: "1 day ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 17,
-    username: "BassBoss",
-    email: "bass@example.com",
-    accessLevel: "PRO",
-    reports: 88,
-    lastActive: "45 mins ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 18,
-    username: "CastingPro",
-    email: "casting@example.com",
-    accessLevel: "FREE",
-    reports: 2,
-    lastActive: "3 weeks ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 19,
-    username: "NetNinja",
-    email: "net@example.com",
-    accessLevel: "PRO",
-    reports: 149,
-    lastActive: "1 hour ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 20,
-    username: "TackleGuru",
-    email: "tackle@example.com",
-    accessLevel: "FREE",
-    reports: 7,
-    lastActive: "4 days ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 21,
-    username: "PiranhaPete",
-    email: "pete@example.com",
-    accessLevel: "PRO",
-    reports: 60,
-    lastActive: "2 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 22,
-    username: "ShallowWader",
-    email: "shallow@example.com",
-    accessLevel: "FREE",
-    reports: 20,
-    lastActive: "6 days ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 23,
-    username: "RiverRogue",
-    email: "river@example.com",
-    accessLevel: "PRO",
-    reports: 102,
-    lastActive: "Just now",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 24,
-    username: "LureMaster_X",
-    email: "lure@example.com",
-    accessLevel: "FREE",
-    reports: 16,
-    lastActive: "1 week ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 25,
-    username: "TigerShark99",
-    email: "tiger@example.com",
-    accessLevel: "PRO",
-    reports: 200,
-    lastActive: "3 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 26,
-    username: "FlatsWalker",
-    email: "flats@example.com",
-    accessLevel: "FREE",
-    reports: 4,
-    lastActive: "2 weeks ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 27,
-    username: "ClamDigger",
-    email: "clam@example.com",
-    accessLevel: "PRO",
-    reports: 38,
-    lastActive: "5 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 28,
-    username: "SeaweedSam",
-    email: "sam@example.com",
-    accessLevel: "FREE",
-    reports: 12,
-    lastActive: "3 days ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 29,
-    username: "BayouFisher",
-    email: "bayou@example.com",
-    accessLevel: "PRO",
-    reports: 74,
-    lastActive: "1 day ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 30,
-    username: "IceHolePro",
-    email: "ice@example.com",
-    accessLevel: "FREE",
-    reports: 6,
-    lastActive: "1 month ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 31,
-    username: "NightCrawler",
-    email: "night@example.com",
-    accessLevel: "PRO",
-    reports: 93,
-    lastActive: "2 hours ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 32,
-    username: "PondHopper",
-    email: "pond@example.com",
-    accessLevel: "FREE",
-    reports: 28,
-    lastActive: "4 hours ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 33,
-    username: "SpinnerBait",
-    email: "spinner@example.com",
-    accessLevel: "PRO",
-    reports: 115,
-    lastActive: "30 mins ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 34,
-    username: "MudCat_5",
-    email: "mudcat@example.com",
-    accessLevel: "FREE",
-    reports: 1,
-    lastActive: "2 months ago",
-    avater: "/avater.png",
-  },
-  {
-    id: 35,
-    username: "CrappieKing",
-    email: "crappie@example.com",
-    accessLevel: "PRO",
-    reports: 49,
-    lastActive: "1 hour ago",
-    verified: true,
-    avater: "/avater.png",
-  },
-  {
-    id: 36,
-    username: "WillowWader",
-    email: "willow@example.com",
-    accessLevel: "FREE",
-    reports: 17,
-    lastActive: "2 days ago",
-    avater: "/avater.png",
-  },
-];
-
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 type SubscriptionLevel = "All" | "Free" | "Pro";
 type AccountStatus = "All" | "Active" | "Blocked";
@@ -371,6 +26,35 @@ type FilterState = {
   accountStatus: AccountStatus;
   reportCount: ReportCount;
 };
+
+const UserCardSkeleton = () => (
+  <div className="bg-[#1E3A5A] border border-[#47596E] rounded-2xl px-5 py-4 flex flex-col gap-3 animate-pulse">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#2a3a58]"></div>
+        <div className="flex flex-col gap-2">
+          <div className="w-24 h-4 bg-[#2a3a58] rounded"></div>
+          <div className="w-32 h-3 bg-[#2a3a58] rounded"></div>
+        </div>
+      </div>
+      <div className="w-8 h-8 rounded-lg bg-[#2a3a58]"></div>
+    </div>
+    <div className="grid grid-cols-3 gap-4 pt-1 border-t border-[#1f2d40]/40">
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="w-16 h-3 bg-[#2a3a58] rounded"></div>
+        <div className="w-12 h-4 bg-[#2a3a58] rounded"></div>
+      </div>
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="w-16 h-3 bg-[#2a3a58] rounded"></div>
+        <div className="w-10 h-4 bg-[#2a3a58] rounded"></div>
+      </div>
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="w-16 h-3 bg-[#2a3a58] rounded"></div>
+        <div className="w-20 h-4 bg-[#2a3a58] rounded"></div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function UsersPageClient() {
   const [search, setSearch] = useState("");
@@ -385,7 +69,7 @@ export default function UsersPageClient() {
   const [currentPage, setCurrentPage] = useState(1);
   const filterMenuRef = useRef<HTMLDivElement>(null);
 
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -417,45 +101,36 @@ export default function UsersPageClient() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ── Filtered + Searched users ── */
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return ALL_USERS.filter((u) => {
-      const matchSearch =
-        !q ||
-        u.username.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q);
+  const { data: apiResponse, isLoading, isFetching } = useQuery({
+    queryKey: ['users', currentPage, ITEMS_PER_PAGE, search, filterState],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      params.append('limit', ITEMS_PER_PAGE.toString());
+      
+      if (search.trim()) {
+        params.append('search', search.trim());
+      }
+      
+      if (filterState.reportCount === "Low (< 20)") params.append('reportCount', 'LESS_THAN_20');
+      else if (filterState.reportCount === "Medium (20-49)") params.append('reportCount', 'BETWEEN_20_AND_49');
+      else if (filterState.reportCount === "High (50+)") params.append('reportCount', 'GREATER_THAN_50');
 
-      const sub = filterState.subscriptionLevel;
-      const matchSub =
-        sub === "All" ||
-        (sub === "Pro" && u.accessLevel === "PRO") ||
-        (sub === "Free" && u.accessLevel === "FREE");
+      if (filterState.subscriptionLevel === "Free") params.append('plan', 'FREE');
+      else if (filterState.subscriptionLevel === "Pro") params.append('plan', 'PRO');
 
-      const acc = filterState.accountStatus;
-      const matchAcc =
-        acc === "All" ||
-        (acc === "Active" && u.verified) ||
-        (acc === "Blocked" && !u.verified);
+      if (filterState.accountStatus === "Active") params.append('status', 'ACTIVE');
+      else if (filterState.accountStatus === "Blocked") params.append('status', 'BLOCKED');
 
-      const rep = filterState.reportCount;
-      let matchRep = true;
-      if (rep === "Low (< 20)") matchRep = u.reports < 20;
-      else if (rep === "Medium (20-49)")
-        matchRep = u.reports >= 20 && u.reports <= 49;
-      else if (rep === "High (50+)") matchRep = u.reports >= 50;
+      const res = await apiClient.get(`/admin/users?${params.toString()}`);
+      return res.data;
+    },
+  });
 
-      return matchSearch && matchSub && matchAcc && matchRep;
-    });
-  }, [search, filterState]);
-
-  /* ── Pagination ── */
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const users = apiResponse?.data || [];
+  const meta = apiResponse?.meta || { total: 0, page: 1, limit: ITEMS_PER_PAGE, totalPages: 1 };
+  const totalPages = Math.max(1, meta.totalPages);
   const safePage = Math.min(currentPage, totalPages);
-  const paginated = filtered.slice(
-    (safePage - 1) * ITEMS_PER_PAGE,
-    safePage * ITEMS_PER_PAGE,
-  );
 
   function handleSearchChange(val: string) {
     setSearch(val);
@@ -473,7 +148,6 @@ export default function UsersPageClient() {
     (filterState.accountStatus !== "All" ? 1 : 0) +
     (filterState.reportCount !== "All" ? 1 : 0);
 
-  /* ── Pagination page numbers (with ellipsis) ── */
   function getPageNumbers() {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -492,7 +166,6 @@ export default function UsersPageClient() {
     <div className="relative flex flex-col gap-5 w-full max-w-full mx-auto animate-fade-in">
       {/* ── Search + Filter Bar ── */}
       <div className="flex items-center gap-3 w-full">
-        {/* Search Input */}
         <div className="relative flex-1">
           <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7a8a9e] w-4 h-4 pointer-events-none" />
           <input
@@ -508,7 +181,6 @@ export default function UsersPageClient() {
           />
         </div>
 
-        {/* Filter Button + Dropdown */}
         <div className="relative" ref={filterMenuRef}>
           <button
             id="user-filter-btn"
@@ -530,126 +202,82 @@ export default function UsersPageClient() {
             )}
           </button>
 
-          {/* Serarch filter dropdown  */}
           {filterOpen && (
             <div className="absolute right-0 top-12 z-50 w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-5 flex flex-col gap-4">
-              {/* Subscription Level */}
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">
-                  Subscription Level
-                </span>
+                <span className="text-sm font-medium text-white">Subscription Level</span>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["All", "Free", "Pro"] as SubscriptionLevel[]).map(
-                    (opt) => (
-                      <button
-                        key={opt}
-                        onClick={() =>
-                          setLocalFilter((p) => ({
-                            ...p,
-                            subscriptionLevel: opt,
-                          }))
-                        }
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                          localFilter.subscriptionLevel === opt
-                            ? "bg-[#117A88] text-white"
-                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Account Status */}
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">
-                  Account Status
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["All", "Active", "Blocked"] as AccountStatus[]).map(
-                    (opt) => (
-                      <button
-                        key={opt}
-                        onClick={() =>
-                          setLocalFilter((p) => ({ ...p, accountStatus: opt }))
-                        }
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                          localFilter.accountStatus === opt
-                            ? "bg-[#117A88] text-white"
-                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Report Count */}
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">
-                  Report Count
-                </span>
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <button
-                    onClick={() =>
-                      setLocalFilter((p) => ({ ...p, reportCount: "All" }))
-                    }
-                    className={`col-span-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                      localFilter.reportCount === "All"
+                  {(["All", "Free", "Pro"] as SubscriptionLevel[]).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setLocalFilter((p) => ({ ...p, subscriptionLevel: opt }))}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.subscriptionLevel === opt
                         ? "bg-[#117A88] text-white"
                         : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                    }`}
+                        }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">Account Status</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["All", "Active", "Blocked"] as AccountStatus[]).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setLocalFilter((p) => ({ ...p, accountStatus: opt }))}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.accountStatus === opt
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                        }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-white">Report Count</span>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <button
+                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "All" }))}
+                    className={`col-span-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "All"
+                      ? "bg-[#117A88] text-white"
+                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
                   >
                     All
                   </button>
                   <button
-                    onClick={() =>
-                      setLocalFilter((p) => ({
-                        ...p,
-                        reportCount: "Low (< 20)",
-                      }))
-                    }
-                    className={`col-span-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                      localFilter.reportCount === "Low (< 20)"
-                        ? "bg-[#117A88] text-white"
-                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                    }`}
+                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "Low (< 20)" }))}
+                    className={`col-span-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "Low (< 20)"
+                      ? "bg-[#117A88] text-white"
+                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
                   >
                     Low (&lt; 20)
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() =>
-                      setLocalFilter((p) => ({
-                        ...p,
-                        reportCount: "Medium (20-49)",
-                      }))
-                    }
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                      localFilter.reportCount === "Medium (20-49)"
-                        ? "bg-[#117A88] text-white"
-                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                    }`}
+                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "Medium (20-49)" }))}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "Medium (20-49)"
+                      ? "bg-[#117A88] text-white"
+                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
                   >
                     Medium (20-49)
                   </button>
                   <button
-                    onClick={() =>
-                      setLocalFilter((p) => ({
-                        ...p,
-                        reportCount: "High (50+)",
-                      }))
-                    }
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                      localFilter.reportCount === "High (50+)"
-                        ? "bg-[#117A88] text-white"
-                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                    }`}
+                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "High (50+)" }))}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "High (50+)"
+                      ? "bg-[#117A88] text-white"
+                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
                   >
                     High (50+)
                   </button>
@@ -671,21 +299,30 @@ export default function UsersPageClient() {
 
       {/* ── Users List Panel ── */}
       <div className="bg-[#19304A] border border-[#223C59] rounded-[20px] p-5 flex flex-col gap-4">
-        {/* Header: Total count */}
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-white">
+          <h2 className="text-base font-bold text-white flex items-center gap-2">
             Total{" "}
-            <span className="text-[#7a8a9e] font-semibold">
-              ({filtered.length})
-            </span>
+            {isLoading ? (
+              <div className="w-8 h-4 bg-[#2a3a58] animate-pulse rounded"></div>
+            ) : (
+              <span className="text-[#7a8a9e] font-semibold">
+                ({meta.total})
+              </span>
+            )}
           </h2>
         </div>
-        {/* User Cards */}
-        {paginated.length > 0 ? (
+
+        {isLoading ? (
           <div className="flex flex-col gap-3">
-            {paginated.map((user) => (
+            {Array.from({ length: 5 }).map((_, i) => (
+              <UserCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : users.length > 0 ? (
+          <div className={`flex flex-col gap-3 transition-opacity duration-200 ${isFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+            {users.map((user: ApiUser) => (
               <UserCard
-                key={user.id}
+                key={user.userId}
                 user={user}
                 onViewDetails={() => setSelectedUser(user)}
               />
@@ -700,14 +337,12 @@ export default function UsersPageClient() {
             </p>
           </div>
         )}
-        {/* ── Pagination ── */}
 
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-1.5 pt-4 border-t border-[#1f2d40]/40 flex-wrap">
-            {/* Previous */}
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={safePage === 1}
+              disabled={safePage === 1 || isFetching}
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                          hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                          transition-all"
@@ -716,34 +351,29 @@ export default function UsersPageClient() {
               <span className="hidden sm:inline">Previous</span>
             </button>
 
-            {/* Page Numbers */}
             {getPageNumbers().map((p, i) =>
               p === "..." ? (
-                <span
-                  key={`ellipsis-${i}`}
-                  className="px-2 text-[#5a6a82] text-sm select-none"
-                >
+                <span key={`ellipsis-${i}`} className="px-2 text-[#5a6a82] text-sm select-none">
                   ...
                 </span>
               ) : (
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p as number)}
-                  className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${
-                    safePage === p
-                      ? "bg-[#D9ECFF] text-black shadow-md shadow-orange-900/30 border border-[#E4E4E7]"
-                      : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60"
-                  }`}
+                  disabled={isFetching}
+                  className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${safePage === p
+                    ? "bg-[#D9ECFF] text-black shadow-md shadow-orange-900/30 border border-[#E4E4E7]"
+                    : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30"
+                    }`}
                 >
                   {p}
                 </button>
               ),
             )}
 
-            {/* Next */}
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safePage === totalPages}
+              disabled={safePage === totalPages || isFetching}
               className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                          hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
                          transition-all"
@@ -761,7 +391,6 @@ export default function UsersPageClient() {
         createPortal(
           <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-[#1e2330]/80 backdrop-blur-sm animate-fade-in">
             <div className="bg-[#242b38] w-full max-w-md rounded-2xl border border-[#393e46] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-              {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-[#393e46] shrink-0">
                 <h3 className="text-lg font-bold text-white">User Details</h3>
                 <button
@@ -772,27 +401,26 @@ export default function UsersPageClient() {
                 </button>
               </div>
 
-              {/* Body */}
               <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
                 <div className="flex items-center gap-4 mb-8">
-                  {selectedUser?.avater ? (
+                  {selectedUser.profileImage ? (
                     <Image
-                      src={"/avater.png"}
+                      src={selectedUser.profileImage}
                       alt="Avatar"
                       width={60}
                       height={60}
+                      className="rounded-full object-cover w-16 h-16"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-2xl shrink-0 border-2 border-[#2a3a58]">
-                      {selectedUser.username
-                        .replace(/[^a-zA-Z]/g, "")
-                        .slice(0, 2)
-                        .toUpperCase()}
+                    <div className="w-16 h-16 rounded-full bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-2xl shrink-0 border-2 border-[#2a3a58]">
+                      {selectedUser.name
+                        ? selectedUser.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()
+                        : "U"}
                     </div>
                   )}
                   <div className="flex flex-col gap-1">
                     <h4 className="text-xl font-bold text-white">
-                      {selectedUser.username}
+                      {selectedUser.name}
                     </h4>
                     <p className="text-[#7a8a9e] text-sm">
                       {selectedUser.email}
@@ -803,39 +431,41 @@ export default function UsersPageClient() {
                 <div className="grid grid-cols-2 gap-y-6">
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Status</span>
-                    <span
-                      className={`text-sm font-semibold uppercase ${selectedUser.verified !== false ? "text-[#00d287]" : "text-red-400"}`}
-                    >
-                      {selectedUser.verified !== false ? "ACTIVE" : "BLOCKED"}
+                    <span className={`text-sm font-semibold uppercase ${selectedUser.status === "ACTIVE" ? "text-[#00d287]" : "text-red-400"}`}>
+                      {selectedUser.status || "Unknown"}
                     </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">Role</span>
+                    <span className="text-sm font-medium text-white">{selectedUser.role}</span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Access Level</span>
-                    <span
-                      className={`text-sm font-semibold uppercase ${selectedUser.accessLevel === "PRO" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}
-                    >
-                      {selectedUser.accessLevel}
+                    <span className={`text-sm font-bold uppercase ${selectedUser.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}>
+                      {selectedUser.subscription.plan}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm text-[#7a8a9e]">Join Date</span>
-                    <span className="text-sm font-semibold text-white">
-                      2025-01-15
+                    <span className="text-sm text-[#7a8a9e]">Reports</span>
+                    <span className="text-sm font-medium text-white">{selectedUser.reportsCount}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-[#7a8a9e]">Created At</span>
+                    <span className="text-sm font-medium text-white">
+                      {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : "Unknown"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm text-[#7a8a9e]">
-                      Total Reports
-                    </span>
-                    <span className="text-sm font-semibold text-white">
-                      {selectedUser.reports}
+                    <span className="text-sm text-[#7a8a9e]">Last Active</span>
+                    <span className="text-sm font-medium text-white">
+                      {selectedUser.lastActive ? formatDistanceToNow(new Date(selectedUser.lastActive), { addSuffix: true }) : "Never"}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>,
-          document.body,
+          document.body
         )}
     </div>
   );

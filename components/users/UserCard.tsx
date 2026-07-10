@@ -4,21 +4,27 @@ import { Ban } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { FiMoreVertical, FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { formatDistanceToNow } from "date-fns";
 
-export type User = {
-  id: number;
-  username: string;
+export type ApiUser = {
+  userId: string;
+  name: string;
   email: string;
-  accessLevel: "PRO" | "FREE";
-  reports: number;
-  lastActive: string;
-  avater: string;
-  avatar?: string;
-  verified?: boolean;
+  profileImage: string | null;
+  role: string;
+  status: string;
+  createdAt: string;
+  lastActive: string | null;
+  reportsCount: number;
+  subscription: {
+    plan: string;
+    status: string;
+    currentPeriodEnd: string | null;
+  };
 };
 
 type UserCardProps = {
-  user: User;
+  user: ApiUser;
   onViewDetails?: () => void;
 };
 
@@ -61,8 +67,8 @@ function DropdownMenu({
             onClose();
           }}
           className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${danger
-              ? "text-red-400 hover:bg-red-500/10"
-              : "text-slate-300 hover:bg-[#243050] hover:text-white"
+            ? "text-red-400 hover:bg-red-500/10"
+            : "text-slate-300 hover:bg-[#243050] hover:text-white"
             }`}
         >
           <Icon className="w-4 h-4 shrink-0" />
@@ -76,10 +82,9 @@ function DropdownMenu({
 export default function UserCard({ user, onViewDetails }: UserCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const initials = user.username
-    .replace(/[^a-zA-Z]/g, "")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = user.name
+    ? user.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()
+    : "U";
 
   return (
     <div className="bg-[#1E3A5A] border border-[#47596E] rounded-2xl px-5 py-4 flex flex-col gap-3 hover:border-[#2a3f60]/80 hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group">
@@ -87,17 +92,21 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-sm shrink-0 border border-[#2a3a58]">
-            <Image src={"/avater.png"} alt={initials} width={50} height={50} />
+          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-sm shrink-0 border border-[#2a3a58] overflow-hidden">
+            {user.profileImage ? (
+              <Image src={user.profileImage} alt={initials} width={50} height={50} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
 
           {/* Name + Email */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold text-white truncate">
-                {user.username}
+                {user.name}
               </span>
-              {user.verified && (
+              {user.status === "ACTIVE" && (
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-500/20 shrink-0">
                   <svg
                     className="w-2.5 h-2.5 text-orange-400"
@@ -145,10 +154,10 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
             Access Level
           </span>
           <span
-            className={`text-[14px] font-bold ${user.accessLevel === "PRO" ? "text-[#ff6b35]" : "text-[#94a3b8]"
+            className={`text-[14px] font-bold ${user.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"
               }`}
           >
-            {user.accessLevel}
+            {user.subscription.plan}
           </span>
         </div>
 
@@ -158,7 +167,7 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
             Reports
           </span>
           <span className="text-[14px] font-bold text-white">
-            {user.reports}
+            {user.reportsCount}
           </span>
         </div>
 
@@ -168,7 +177,7 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
             Last Active
           </span>
           <span className="text-[14px] font-semibold text-white">
-            {user.lastActive}
+            {user.lastActive ? formatDistanceToNow(new Date(user.lastActive), { addSuffix: true }) : "Never"}
           </span>
         </div>
       </div>
