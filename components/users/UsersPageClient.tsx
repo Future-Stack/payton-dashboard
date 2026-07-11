@@ -104,26 +104,37 @@ export default function UsersPageClient() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const { data: apiResponse, isLoading, isFetching } = useQuery({
-    queryKey: ['users', currentPage, ITEMS_PER_PAGE, search, filterState],
+  const {
+    data: apiResponse,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ["users", currentPage, ITEMS_PER_PAGE, search, filterState],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('page', currentPage.toString());
-      params.append('limit', ITEMS_PER_PAGE.toString());
+      params.append("page", currentPage.toString());
+      params.append("limit", ITEMS_PER_PAGE.toString());
 
       if (search.trim()) {
-        params.append('search', search.trim());
+        params.append("search", search.trim());
       }
 
-      if (filterState.reportCount === "Low (< 20)") params.append('reportCount', 'LESS_THAN_20');
-      else if (filterState.reportCount === "Medium (20-49)") params.append('reportCount', 'BETWEEN_20_AND_49');
-      else if (filterState.reportCount === "High (50+)") params.append('reportCount', 'GREATER_THAN_50');
+      if (filterState.reportCount === "Low (< 20)")
+        params.append("reportCount", "LESS_THAN_20");
+      else if (filterState.reportCount === "Medium (20-49)")
+        params.append("reportCount", "BETWEEN_20_AND_49");
+      else if (filterState.reportCount === "High (50+)")
+        params.append("reportCount", "GREATER_THAN_50");
 
-      if (filterState.subscriptionLevel === "Free") params.append('plan', 'FREE');
-      else if (filterState.subscriptionLevel === "Pro") params.append('plan', 'PRO');
+      if (filterState.subscriptionLevel === "Free")
+        params.append("plan", "FREE");
+      else if (filterState.subscriptionLevel === "Pro")
+        params.append("plan", "PRO");
 
-      if (filterState.accountStatus === "Active") params.append('status', 'ACTIVE');
-      else if (filterState.accountStatus === "Blocked") params.append('status', 'BLOCKED');
+      if (filterState.accountStatus === "Active")
+        params.append("status", "ACTIVE");
+      else if (filterState.accountStatus === "Blocked")
+        params.append("status", "BLOCKED");
 
       const res = await apiClient.get(`/admin/users?${params.toString()}`);
       return res.data;
@@ -134,7 +145,7 @@ export default function UsersPageClient() {
     mutationFn: (userId: string) => userService.deleteUser(userId),
     onSuccess: () => {
       toast.success("User successfully removed");
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to remove user");
@@ -142,32 +153,41 @@ export default function UsersPageClient() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ userId, status }: { userId: string; status: "ACTIVE" | "SUSPEND" }) =>
-      userService.updateUserStatus(userId, status),
+    mutationFn: ({
+      userId,
+      status,
+    }: {
+      userId: string;
+      status: "ACTIVE" | "SUSPEND";
+    }) => userService.updateUserStatus(userId, status),
     onSuccess: (data, variables) => {
       toast.success(`User status successfully updated to ${variables.status}`);
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update user status");
+      toast.error(
+        error.response?.data?.message || "Failed to update user status",
+      );
     },
   });
 
   const handleDeleteUser = (userId: string) => {
-    if (confirm("Are you sure you want to remove this user?")) {
-      deleteMutation.mutate(userId);
-    }
+    deleteMutation.mutate(userId);
   };
 
   const handleToggleStatus = (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === "ACTIVE" ? "SUSPEND" : "ACTIVE";
-    if (confirm(`Are you sure you want to ${newStatus.toLowerCase()} this user?`)) {
-      statusMutation.mutate({ userId, status: newStatus });
-    }
+
+    statusMutation.mutate({ userId, status: newStatus });
   };
 
   const users = apiResponse?.data || [];
-  const meta = apiResponse?.meta || { total: 0, page: 1, limit: ITEMS_PER_PAGE, totalPages: 1 };
+  const meta = apiResponse?.meta || {
+    total: 0,
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    totalPages: 1,
+  };
   const totalPages = Math.max(1, meta.totalPages);
   const safePage = Math.min(currentPage, totalPages);
 
@@ -244,79 +264,119 @@ export default function UsersPageClient() {
           {filterOpen && (
             <div className="absolute right-0 top-12 z-50 w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-5 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">Subscription Level</span>
+                <span className="text-sm font-medium text-white">
+                  Subscription Level
+                </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["All", "Free", "Pro"] as SubscriptionLevel[]).map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setLocalFilter((p) => ({ ...p, subscriptionLevel: opt }))}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.subscriptionLevel === opt
-                        ? "bg-[#117A88] text-white"
-                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                  {(["All", "Free", "Pro"] as SubscriptionLevel[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({
+                            ...p,
+                            subscriptionLevel: opt,
+                          }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                          localFilter.subscriptionLevel === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
                         }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">Account Status</span>
+                <span className="text-sm font-medium text-white">
+                  Account Status
+                </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["All", "Active", "Blocked"] as AccountStatus[]).map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => setLocalFilter((p) => ({ ...p, accountStatus: opt }))}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.accountStatus === opt
-                        ? "bg-[#117A88] text-white"
-                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                  {(["All", "Active", "Blocked"] as AccountStatus[]).map(
+                    (opt) => (
+                      <button
+                        key={opt}
+                        onClick={() =>
+                          setLocalFilter((p) => ({ ...p, accountStatus: opt }))
+                        }
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                          localFilter.accountStatus === opt
+                            ? "bg-[#117A88] text-white"
+                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
                         }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+                      >
+                        {opt}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">Report Count</span>
+                <span className="text-sm font-medium text-white">
+                  Report Count
+                </span>
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   <button
-                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "All" }))}
-                    className={`col-span-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "All"
-                      ? "bg-[#117A88] text-white"
-                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                      }`}
+                    onClick={() =>
+                      setLocalFilter((p) => ({ ...p, reportCount: "All" }))
+                    }
+                    className={`col-span-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "All"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
                   >
                     All
                   </button>
                   <button
-                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "Low (< 20)" }))}
-                    className={`col-span-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "Low (< 20)"
-                      ? "bg-[#117A88] text-white"
-                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                      }`}
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "Low (< 20)",
+                      }))
+                    }
+                    className={`col-span-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "Low (< 20)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
                   >
                     Low (&lt; 20)
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "Medium (20-49)" }))}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "Medium (20-49)"
-                      ? "bg-[#117A88] text-white"
-                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                      }`}
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "Medium (20-49)",
+                      }))
+                    }
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "Medium (20-49)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
                   >
                     Medium (20-49)
                   </button>
                   <button
-                    onClick={() => setLocalFilter((p) => ({ ...p, reportCount: "High (50+)" }))}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${localFilter.reportCount === "High (50+)"
-                      ? "bg-[#117A88] text-white"
-                      : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                      }`}
+                    onClick={() =>
+                      setLocalFilter((p) => ({
+                        ...p,
+                        reportCount: "High (50+)",
+                      }))
+                    }
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                      localFilter.reportCount === "High (50+)"
+                        ? "bg-[#117A88] text-white"
+                        : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                    }`}
                   >
                     High (50+)
                   </button>
@@ -358,14 +418,18 @@ export default function UsersPageClient() {
             ))}
           </div>
         ) : users.length > 0 ? (
-          <div className={`flex flex-col gap-3 transition-opacity duration-200 ${isFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+          <div
+            className={`flex flex-col gap-3 transition-opacity duration-200 ${isFetching ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+          >
             {users.map((user: ApiUser) => (
               <UserCard
                 key={user.userId}
                 user={user}
                 onViewDetails={() => setSelectedUser(user)}
                 onDelete={() => handleDeleteUser(user.userId)}
-                onToggleStatus={() => handleToggleStatus(user.userId, user.status)}
+                onToggleStatus={() =>
+                  handleToggleStatus(user.userId, user.status)
+                }
               />
             ))}
           </div>
@@ -394,7 +458,10 @@ export default function UsersPageClient() {
 
             {getPageNumbers().map((p, i) =>
               p === "..." ? (
-                <span key={`ellipsis-${i}`} className="px-2 text-[#5a6a82] text-sm select-none">
+                <span
+                  key={`ellipsis-${i}`}
+                  className="px-2 text-[#5a6a82] text-sm select-none"
+                >
                   ...
                 </span>
               ) : (
@@ -402,10 +469,11 @@ export default function UsersPageClient() {
                   key={p}
                   onClick={() => setCurrentPage(p as number)}
                   disabled={isFetching}
-                  className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${safePage === p
-                    ? "bg-[#D9ECFF] text-black shadow-md shadow-orange-900/30 border border-[#E4E4E7]"
-                    : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30"
-                    }`}
+                  className={`w-9 h-9 rounded-md text-sm font-semibold transition-all ${
+                    safePage === p
+                      ? "bg-[#D9ECFF] text-black shadow-md shadow-orange-900/30 border border-[#E4E4E7]"
+                      : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30"
+                  }`}
                 >
                   {p}
                 </button>
@@ -455,7 +523,10 @@ export default function UsersPageClient() {
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-2xl shrink-0 border-2 border-[#2a3a58]">
                       {selectedUser.name
-                        ? selectedUser.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()
+                        ? selectedUser.name
+                            .replace(/[^a-zA-Z]/g, "")
+                            .slice(0, 2)
+                            .toUpperCase()
                         : "U"}
                     </div>
                   )}
@@ -472,41 +543,56 @@ export default function UsersPageClient() {
                 <div className="grid grid-cols-2 gap-y-6">
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Status</span>
-                    <span className={`text-sm font-semibold uppercase ${selectedUser.status === "ACTIVE" ? "text-[#00d287]" : "text-red-400"}`}>
+                    <span
+                      className={`text-sm font-semibold uppercase ${selectedUser.status === "ACTIVE" ? "text-[#00d287]" : "text-red-400"}`}
+                    >
                       {selectedUser.status || "Unknown"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Role</span>
-                    <span className="text-sm font-medium text-white">{selectedUser.role}</span>
+                    <span className="text-sm font-medium text-white">
+                      {selectedUser.role}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Access Level</span>
-                    <span className={`text-sm font-bold uppercase ${selectedUser.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}>
+                    <span
+                      className={`text-sm font-bold uppercase ${selectedUser.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}
+                    >
                       {selectedUser.subscription.plan}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Reports</span>
-                    <span className="text-sm font-medium text-white">{selectedUser.reportsCount}</span>
+                    <span className="text-sm font-medium text-white">
+                      {selectedUser.reportsCount}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Created At</span>
                     <span className="text-sm font-medium text-white">
-                      {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : "Unknown"}
+                      {selectedUser.createdAt
+                        ? new Date(selectedUser.createdAt).toLocaleDateString()
+                        : "Unknown"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Last Active</span>
                     <span className="text-sm font-medium text-white">
-                      {selectedUser.lastActive ? formatDistanceToNow(new Date(selectedUser.lastActive), { addSuffix: true }) : "Never"}
+                      {selectedUser.lastActive
+                        ? formatDistanceToNow(
+                            new Date(selectedUser.lastActive),
+                            { addSuffix: true },
+                          )
+                        : "Never"}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

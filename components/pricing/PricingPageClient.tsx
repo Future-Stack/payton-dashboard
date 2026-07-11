@@ -1,7 +1,5 @@
 "use client";
-
-import { useState } from "react";
-import { FiEdit2, FiCheck } from "react-icons/fi";
+import { FiCheck } from "react-icons/fi";
 import { RiVipCrownLine } from "react-icons/ri";
 
 /* ─────────────────── Types ─────────────────── */
@@ -191,8 +189,6 @@ function PlanSection({ title, plans }: { title: string; plans: Plan[] }) {
 
 /* ─────────────────── Main Component ─────────────────── */
 export default function PricingPageClient() {
-  const [editMode, setEditMode] = useState(false);
-
   return (
     <div className="flex flex-col gap-6 w-full max-w-full mx-auto animate-fade-in">
       {/* ── Page Header ── */}
@@ -205,20 +201,6 @@ export default function PricingPageClient() {
             Manage tier pricing and features
           </p>
         </div>
-
-        {/* Edit Button */}
-        {/* <button
-          id="pricing-edit-btn"
-          onClick={() => setEditMode((prev) => !prev)}
-          className="
-            flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-            bg-[#0a9396] text-white shadow-lg shadow-cyan-900/20
-            transition-all duration-200 hover:bg-[#0b8285] hover:scale-[1.02] active:scale-95 shrink-0
-          "
-        >
-          <FiEdit2 className="w-4 h-4" />
-          <span>{editMode ? "Done" : "Edit"}</span>
-        </button> */}
       </div>
 
       {/* ── Plan Sections ── */}
