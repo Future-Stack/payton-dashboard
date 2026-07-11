@@ -6,7 +6,19 @@ import { FiUsers, FiFileText, FiDollarSign } from "react-icons/fi";
 import { FaCrown } from "react-icons/fa";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function Cards() {
+import { DashboardStatsResponse } from "@/services/api/dashboardService";
+
+interface CardsProps {
+  stats: DashboardStatsResponse["data"]["stats"];
+  monthlyRevenue: DashboardStatsResponse["data"]["monthlyRevenue"];
+  monthlyRegistrations: DashboardStatsResponse["data"]["monthlyRegistrations"];
+}
+
+export default function Cards({
+  stats,
+  monthlyRevenue,
+  monthlyRegistrations,
+}: CardsProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -53,14 +65,29 @@ export default function Cards() {
       colors: ["rgba(0, 212, 255, 0.10)"],
     },
 
-    tooltip: { enabled: true },
+    tooltip: {
+      enabled: true,
+      theme: "dark",
+      x: {
+        show: true,
+      },
+    },
+    xaxis: {
+      type: "category",
+      tickAmount: "dataPoints",
+      categories: monthlyRegistrations.map((m) => m.month),
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      tooltip: { enabled: false },
+    },
     colors: ["#fd5c28"],
     grid: { show: false, padding: { left: 0, right: 0, top: 0, bottom: 0 } },
   };
   const usersAreaSeries = [
     {
       name: "Users",
-      data: [29800, 30200, 29900, 30700, 30400, 31000, 30700, 31200],
+      data: monthlyRegistrations.map((m) => m.count),
     },
   ];
 
@@ -75,7 +102,7 @@ export default function Cards() {
     stroke: { show: false },
     dataLabels: { enabled: false },
     legend: { show: false },
-    colors: ["#fd5c28", "#00897b"],
+    colors: ["#00897b", "#fd5c28"],
     plotOptions: {
       pie: {
         expandOnClick: false,
@@ -84,7 +111,10 @@ export default function Cards() {
     },
     tooltip: { enabled: true },
   };
-  const reportsDonutSeries = [27, 73];
+  const reportsDonutSeries = [
+    stats.reports.today,
+    Math.max(0, stats.reports.total - stats.reports.today),
+  ];
 
   /* ─────────────── Card 4: Total Revenue ─────────────── */
   const revenueBarOptions: ApexCharts.ApexOptions = {
@@ -103,6 +133,9 @@ export default function Cards() {
         columnWidth: "45%",
       },
     },
+    dataLabels: {
+      enabled: false,
+    },
     fill: {
       type: "gradient",
       gradient: {
@@ -113,13 +146,79 @@ export default function Cards() {
         opacityTo: 0.85,
       },
     },
+    xaxis: {
+      type: "category",
+      tickAmount: "dataPoints",
+      categories: monthlyRevenue.map((m) => m.month),
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      tooltip: { enabled: false },
+    },
+    yaxis: {
+      show: false,
+      min: 0,
+      max: Math.max(...monthlyRevenue.map((m) => m.revenue), 100),
+    },
     colors: ["#fd5c28"],
-    tooltip: { enabled: true },
+    tooltip: {
+      enabled: true,
+      theme: "dark",
+      x: {
+        show: true,
+        formatter: (val, opts) => {
+          return String(
+            opts?.dataPointIndex !== undefined
+              ? monthlyRevenue[opts.dataPointIndex]?.month || val
+              : val,
+          );
+        },
+      },
+      y: {
+        title: {
+          formatter: () => "Revenue:",
+        },
+        formatter: (val) => `$${val.toLocaleString()}`,
+      },
+    },
     grid: { show: false, padding: { left: 0, right: 0, top: 0, bottom: 0 } },
   };
   const revenueBarSeries = [
-    { name: "Revenue", data: [35, 60, 42, 80, 50, 75, 48, 65, 55, 70] },
+    { name: "Revenue", data: monthlyRevenue.map((m) => m.revenue) },
   ];
+
+  /* ─────────────── Card 2: Pro Users Dynamic SVG ─────────────── */
+  const proUsersCount = stats.proUsers.total;
+  const freeUsersCount = Math.max(0, stats.users.total - proUsersCount);
+
+  const getBarProps = (
+    xLeft: number,
+    xRight: number,
+    value: number,
+    label: string,
+  ) => {
+    const ratio =
+      stats.users.total > 0 ? Math.min(1, value / stats.users.total) : 0;
+    const leftH = Math.max(15, 70 * ratio); // give min height so text doesn't hit bottom
+    const rightH = Math.max(15, 90 * ratio);
+    const yLeft = 110 - leftH;
+    const yRight = 110 - rightH;
+    const midX = xLeft + (xRight - xLeft) / 2;
+    const midY = yLeft + (yRight - yLeft) / 2;
+    const textY = midY - 14;
+    const angle = Math.atan2(yRight - yLeft, xRight - xLeft) * (180 / Math.PI);
+    return {
+      points: `${xLeft},${yLeft} ${xRight},${yRight} ${xRight},110 ${xLeft},110`,
+      textX: midX,
+      textY,
+      transform: `rotate(${angle.toFixed(1)}, ${midX}, ${textY})`,
+      labelText: `${label}: ${value.toLocaleString()}`,
+    };
+  };
+
+  const totalProps = getBarProps(15, 85, stats.users.total, "Total");
+  const proProps = getBarProps(105, 175, proUsersCount, "Pro");
+  const freeProps = getBarProps(195, 265, freeUsersCount, "Free");
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 w-full">
@@ -128,7 +227,7 @@ export default function Cards() {
         <div className="flex-1 min-h-0 flex flex-col px-6 pt-2 bg-[#19304A] rounded-b-4xl">
           {/* Big number */}
           <h3 className="text-[2rem] font-bold text-white tracking-tight leading-none mt-3">
-            31,200
+            {stats.users.total.toLocaleString()}
           </h3>
 
           {/* Area Chart – fills remaining space */}
@@ -159,7 +258,7 @@ export default function Cards() {
         <div className="px-5 py-1 flex justify-between items-center text-white text-sm font-normal tracking-wide shrink-0">
           <span>Total users increase rate</span>
           <span className="flex items-center gap-1 bg-white/10  px-2 rounded-full">
-            ↗ +42 this week
+            {stats.users.changeText}
           </span>
         </div>
       </div>
@@ -168,7 +267,7 @@ export default function Cards() {
       <div className="bg-[#00897b] rounded-3xl overflow-hidden flex flex-col h-68.5 shadow-lg">
         <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
           <h3 className="text-[2rem] font-bold text-white tracking-tight leading-none">
-            342
+            {stats.proUsers.total.toLocaleString()}
           </h3>
 
           <div className="flex-1 min-h-0 flex items-end justify-center pb-1 mt-2">
@@ -193,60 +292,60 @@ export default function Cards() {
               </defs>
 
               <polygon
-                points="15,40 85,20 85,110 15,110"
+                points={totalProps.points}
                 fill="url(#og)"
                 stroke="url(#og)"
                 strokeWidth="12"
                 strokeLinejoin="round"
               />
               <text
-                x="50"
-                y="14"
+                x={totalProps.textX}
+                y={totalProps.textY}
                 fill="#f8fafc"
                 fontSize="11"
                 fontWeight="400"
                 textAnchor="middle"
-                transform="rotate(-15, 50, 14)"
+                transform={totalProps.transform}
               >
-                Total users
+                {totalProps.labelText}
               </text>
 
               <polygon
-                points="105,75 175,65 175,110 105,110"
+                points={proProps.points}
                 fill="url(#yg)"
                 stroke="url(#yg)"
                 strokeWidth="12"
                 strokeLinejoin="round"
               />
               <text
-                x="140"
-                y="53"
+                x={proProps.textX}
+                y={proProps.textY}
                 fill="#f8fafc"
                 fontSize="11"
                 fontWeight="400"
                 textAnchor="middle"
-                transform="rotate(-8, 140, 53)"
+                transform={proProps.transform}
               >
-                Premium user
+                {proProps.labelText}
               </text>
 
               <polygon
-                points="195,50 265,35 265,110 195,110"
+                points={freeProps.points}
                 fill="url(#tg)"
                 stroke="url(#tg)"
                 strokeWidth="12"
                 strokeLinejoin="round"
               />
               <text
-                x="230"
-                y="30"
+                x={freeProps.textX}
+                y={freeProps.textY}
                 fill="#f8fafc"
                 fontSize="11"
                 fontWeight="400"
                 textAnchor="middle"
-                transform="rotate(-12, 230, 30)"
+                transform={freeProps.transform}
               >
-                Free user
+                {freeProps.labelText}
               </text>
             </svg>
           </div>
@@ -276,7 +375,7 @@ export default function Cards() {
             >
               <path d="M7 17l9.2-9.2M17 17V7H7" />
             </svg>
-            27% conversion
+            {stats.proUsers.changeText}
           </span>
         </div>
       </div>
@@ -286,7 +385,7 @@ export default function Cards() {
         <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
           {/* Big number */}
           <h3 className="text-[2rem] font-extrabold text-white tracking-tight leading-none">
-            8,562
+            {stats.reports.total.toLocaleString()}
           </h3>
 
           {/* Legend + Donut Chart row */}
@@ -296,13 +395,13 @@ export default function Cards() {
               <div className="flex items-start gap-2">
                 <span className="mt-1 w-2.5 h-2.5 rounded-full bg-[#fd5c28] shrink-0" />
                 <span className="text-[18px] font-bold text-white leading-snug">
-                  Total Report - 8562
+                  Total Report - {stats.reports.total}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00897b] shrink-0" />
                 <span className="text-[14px] font-semibold text-white">
-                  Today - 124
+                  Today - {stats.reports.today}
                 </span>
               </div>
             </div>
@@ -336,7 +435,7 @@ export default function Cards() {
         <div className="px-5 py-1 flex justify-between items-center text-white text-sm font-normal tracking-wide shrink-0">
           <span>Report submitted</span>
           <span className="flex items-center gap-1 bg-white/10   px-2 rounded-full">
-            ↗ +124 today
+            {stats.reports.changeText}
           </span>
         </div>
       </div>
@@ -346,7 +445,7 @@ export default function Cards() {
         <div className="flex-1 min-h-0 flex flex-col px-6 pt-5 bg-[#19304A] rounded-b-4xl">
           {/* Big number */}
           <h3 className="text-[2rem] font-extrabold text-white tracking-tight leading-none">
-            $2,000
+            ${stats.revenue.total.toLocaleString()}
           </h3>
 
           {/* Bar Chart – fills remaining space */}
@@ -376,7 +475,9 @@ export default function Cards() {
         {/* Bottom Banner */}
         <div className="px-5 py-1 flex justify-between items-center text-white text-[14px] font-normal tracking-wide shrink-0">
           <span>This month</span>
-          <span className="font-normal text-sm">$ 892</span>
+          <span className="font-normal text-sm">
+            $ {stats.revenue.thisMonth.toLocaleString()}
+          </span>
         </div>
       </div>
     </div>

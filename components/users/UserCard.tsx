@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban } from "lucide-react";
+import { Ban, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { FiMoreVertical, FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
@@ -26,14 +26,22 @@ export type ApiUser = {
 type UserCardProps = {
   user: ApiUser;
   onViewDetails?: () => void;
+  onDelete?: () => void;
+  onToggleStatus?: () => void;
 };
 
 function DropdownMenu({
   onClose,
   onViewDetails,
+  onDelete,
+  onToggleStatus,
+  userStatus,
 }: {
   onClose: () => void;
   onViewDetails?: () => void;
+  onDelete?: () => void;
+  onToggleStatus?: () => void;
+  userStatus: string;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -47,11 +55,17 @@ function DropdownMenu({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
+  const isSuspended = userStatus === "SUSPEND";
+
   const actions = [
     { label: "View Details", icon: FiEye, onClick: onViewDetails },
-    { label: "Downgrade to Free", icon: FiEdit2 },
-    { label: "Block User", icon: Ban, danger: true },
-    { label: "Remove User", icon: FiTrash2, danger: true },
+    { 
+      label: isSuspended ? "Activate User" : "Suspend User", 
+      icon: isSuspended ? CheckCircle : Ban, 
+      danger: !isSuspended, 
+      onClick: onToggleStatus 
+    },
+    { label: "Remove User", icon: FiTrash2, danger: true, onClick: onDelete },
   ];
 
   return (
@@ -66,10 +80,11 @@ function DropdownMenu({
             if (onClick) onClick();
             onClose();
           }}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${danger
-            ? "text-red-400 hover:bg-red-500/10"
-            : "text-slate-300 hover:bg-[#243050] hover:text-white"
-            }`}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+            danger
+              ? "text-red-400 hover:bg-red-500/10"
+              : "text-slate-300 hover:bg-[#243050] hover:text-white"
+          }`}
         >
           <Icon className="w-4 h-4 shrink-0" />
           {label}
@@ -79,11 +94,19 @@ function DropdownMenu({
   );
 }
 
-export default function UserCard({ user, onViewDetails }: UserCardProps) {
+export default function UserCard({
+  user,
+  onViewDetails,
+  onDelete,
+  onToggleStatus,
+}: UserCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const initials = user.name
-    ? user.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()
+    ? user.name
+        .replace(/[^a-zA-Z]/g, "")
+        .slice(0, 2)
+        .toUpperCase()
     : "U";
 
   return (
@@ -94,7 +117,13 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
           {/* Avatar */}
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-sm shrink-0 border border-[#2a3a58] overflow-hidden">
             {user.profileImage ? (
-              <Image src={user.profileImage} alt={initials} width={50} height={50} className="w-full h-full object-cover" />
+              <Image
+                src={user.profileImage}
+                alt={initials}
+                width={50}
+                height={50}
+                className="w-full h-full object-cover"
+              />
             ) : (
               initials
             )}
@@ -141,21 +170,27 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
             <DropdownMenu
               onClose={() => setMenuOpen(false)}
               onViewDetails={onViewDetails}
+              onDelete={onDelete}
+              onToggleStatus={onToggleStatus}
+              userStatus={user.status}
             />
           )}
         </div>
       </div>
 
       {/* Bottom Row: Stats */}
-      <div className="grid grid-cols-3 gap-4 pt-1 border-t border-[#1f2d40]/40">
+      <div className="grid grid-cols-4 gap-4 pt-1 border-t border-[#1f2d40]/40">
         {/* Access Level */}
         <div className="flex flex-col gap-1">
           <span className="text-[12px] text-[#DFE3E8] uppercase tracking-wider font-medium">
             Access Level
           </span>
           <span
-            className={`text-[14px] font-bold ${user.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"
-              }`}
+            className={`text-[14px] font-bold ${
+              user.subscription.plan !== "FREE"
+                ? "text-[#ff6b35]"
+                : "text-[#94a3b8]"
+            }`}
           >
             {user.subscription.plan}
           </span>
@@ -177,7 +212,20 @@ export default function UserCard({ user, onViewDetails }: UserCardProps) {
             Last Active
           </span>
           <span className="text-[14px] font-semibold text-white">
-            {user.lastActive ? formatDistanceToNow(new Date(user.lastActive), { addSuffix: true }) : "Never"}
+            {user.lastActive
+              ? formatDistanceToNow(new Date(user.lastActive), {
+                  addSuffix: true,
+                })
+              : "Never"}
+          </span>
+        </div>
+        {/* User Status */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[12px] text-[#DFE3E8] uppercase tracking-wider font-medium">
+            Status
+          </span>
+          <span className="text-[14px] font-semibold text-white">
+            {user.status}
           </span>
         </div>
       </div>

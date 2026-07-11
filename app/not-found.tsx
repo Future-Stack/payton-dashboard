@@ -11,24 +11,22 @@ export default function NotFound() {
         background: "linear-gradient(180deg, #0A1628 0%, #284A6C 100%)",
       }}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[440px] p-10 animate-fade-in text-center">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-110 p-10 animate-fade-in text-center">
         <div className="flex flex-col items-center mb-8">
           <Image
             src="/logo.png"
             alt="On The Bite Logo"
             width={120}
             height={80}
-            className="object-contain h-[70px] w-auto mb-6"
+            className="object-contain h-17.5 w-auto mb-6"
             priority
           />
-          <h1 className="text-7xl font-bold text-[#FF6A3D] mb-2">
-            404
-          </h1>
+          <h1 className="text-7xl font-bold text-[#FF6A3D] mb-2">404</h1>
           <h2 className="text-xl font-bold text-[#0A1628] mb-3">
             Page Not Found
           </h2>
           <p className="text-[13px] font-medium text-gray-500">
-            The page you are looking for doesn't exist or has been moved.
+            The page you are looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
 

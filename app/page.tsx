@@ -38,8 +38,21 @@ export default function Home() {
   const loginMutation = useMutation({
     mutationFn: (data: LoginFormValues) => authService.login(data),
     onSuccess: (data, variables) => {
-      if (data.data?.accessToken) {
-        setAuth(data.data.accessToken, { id: 1, email: variables.email });
+      if (data.data?.accessToken && data.data?.refreshToken) {
+        let userId: string | number = 1;
+        try {
+          const base64Url = data.data.accessToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          const decoded = JSON.parse(jsonPayload);
+          userId = decoded.sub || 1;
+        } catch (e) {
+          console.error("Failed to decode token", e);
+        }
+
+        setAuth(data.data.accessToken, data.data.refreshToken, { id: userId, email: variables.email });
         toast.success(data.message || "Login successful");
         router.push("/dashboard");
       } else {
@@ -47,7 +60,8 @@ export default function Home() {
       }
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || "An error occurred during login";
+      const errorMessage =
+        error.response?.data?.message || "An error occurred during login";
       toast.error(errorMessage);
     },
   });
@@ -63,14 +77,14 @@ export default function Home() {
         background: "linear-gradient(180deg, #0A1628 0%, #284A6C 100%)",
       }}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[440px] p-10 animate-fade-in">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-110 p-10 animate-fade-in">
         <div className="flex flex-col items-center mb-8">
           <Image
             src="/logo.png"
             alt="On The Bite Logo"
             width={120}
             height={80}
-            className="object-contain h-[70px] w-auto mb-2"
+            className="object-contain h-17.5 w-auto mb-2"
             priority
           />
           <h1 className="text-2xl font-bold text-[#0A1628] mt-2 mb-1">
@@ -99,7 +113,9 @@ export default function Home() {
               }`}
             />
             {errors.email && (
-              <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>
+              <p className="text-red-500 text-xs mt-1 font-medium">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
@@ -120,7 +136,9 @@ export default function Home() {
               }`}
             />
             {errors.password && (
-              <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>
+              <p className="text-red-500 text-xs mt-1 font-medium">
+                {errors.password.message}
+              </p>
             )}
             <div className="flex justify-end mt-1.5">
               <Link

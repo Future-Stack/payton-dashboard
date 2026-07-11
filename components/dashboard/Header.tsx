@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { FiSearch, FiBell, FiMenu } from "react-icons/fi";
-import avater from "./avater.png";
+import { FiSearch, FiMenu } from "react-icons/fi";
+import { useQuery } from "@tanstack/react-query";
+import { userService } from "@/services/api/userService";
+import { UserRound } from "lucide-react";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -12,6 +14,14 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  const { data: userProfileResponse, isLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: userService.getMe,
+    retry: false,
+  });
+
+  const user = userProfileResponse?.data;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -157,16 +167,20 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         
                        flex items-center justify-center text-white shadow-sm shrink-0"
           >
-            <Image src={"/avater.png"} alt="avater" width={42} height={42} />
+            {user?.profileImage ? (
+              <Image src={user.profileImage} alt="avatar" width={42} height={42} className="w-full h-full object-cover" />
+            ) : (
+              <UserRound className="w-6 h-6 text-slate-300" />
+            )}
           </div>
 
           {/* User Details - hidden on very small screens */}
           <div className="hidden sm:flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-white">
-              Leslie Alexander
+            <span className="text-sm font-semibold text-white truncate max-w-[150px]">
+              {isLoading ? "Loading..." : (user?.name || "User")}
             </span>
-            <span className="text-[11px] text-white font-medium mt-1">
-              demo@admin.com
+            <span className="text-[11px] text-white font-medium mt-1 truncate max-w-[150px]">
+              {isLoading ? "..." : (user?.email || "")}
             </span>
           </div>
         </div>

@@ -1,28 +1,26 @@
 "use client";
 
-type DistributionItem = {
-  label: string;
-  count: number;
-  percent: number;
-  barColor: string;
-};
+import { DashboardStatsResponse } from "@/services/api/dashboardService";
 
-const items: DistributionItem[] = [
-  {
-    label: "Pro Users",
-    count: 342,
-    percent: 27,
-    barColor: "from-[#ff7a45] to-[#fd5c28]",
-  },
-  {
-    label: "Reports in group",
-    count: 906,
-    percent: 73,
-    barColor: "from-[#26d0be] to-[#00897b]",
-  },
-];
+interface AccessLevelDistributionProps {
+  distribution: DashboardStatsResponse['data']['accessLevelDistribution'];
+}
 
-export default function AccessLevelDistribution() {
+export default function AccessLevelDistribution({ distribution }: AccessLevelDistributionProps) {
+  // Map API response colors depending on label
+  const items = distribution.map(item => {
+    let barColor = "from-[#26d0be] to-[#00897b]";
+    if (item.label === "Pro Users") {
+      barColor = "from-[#ff7a45] to-[#fd5c28]";
+    }
+    return {
+      label: item.label,
+      count: item.count,
+      percent: item.percentage,
+      barColor,
+    };
+  });
+
   return (
     <section className="bg-[#19304A] rounded-3xl border border-[#1f2d40]/40 shadow-lg p-6 md:p-8">
       <h2 className="text-lg font-bold text-white mb-6 tracking-wide">

@@ -11,9 +11,11 @@ import {
 } from "react-icons/fi";
 import UserCard, { type ApiUser } from "@/components/users/UserCard";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/api/axios";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { userService } from "@/services/api/userService";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -71,6 +73,7 @@ export default function UsersPageClient() {
 
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setMounted(true);
@@ -107,11 +110,11 @@ export default function UsersPageClient() {
       const params = new URLSearchParams();
       params.append('page', currentPage.toString());
       params.append('limit', ITEMS_PER_PAGE.toString());
-      
+
       if (search.trim()) {
         params.append('search', search.trim());
       }
-      
+
       if (filterState.reportCount === "Low (< 20)") params.append('reportCount', 'LESS_THAN_20');
       else if (filterState.reportCount === "Medium (20-49)") params.append('reportCount', 'BETWEEN_20_AND_49');
       else if (filterState.reportCount === "High (50+)") params.append('reportCount', 'GREATER_THAN_50');
@@ -126,6 +129,42 @@ export default function UsersPageClient() {
       return res.data;
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) => userService.deleteUser(userId),
+    onSuccess: () => {
+      toast.success("User successfully removed");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to remove user");
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ userId, status }: { userId: string; status: "ACTIVE" | "SUSPEND" }) =>
+      userService.updateUserStatus(userId, status),
+    onSuccess: (data, variables) => {
+      toast.success(`User status successfully updated to ${variables.status}`);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update user status");
+    },
+  });
+
+  const handleDeleteUser = (userId: string) => {
+    if (confirm("Are you sure you want to remove this user?")) {
+      deleteMutation.mutate(userId);
+    }
+  };
+
+  const handleToggleStatus = (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === "ACTIVE" ? "SUSPEND" : "ACTIVE";
+    if (confirm(`Are you sure you want to ${newStatus.toLowerCase()} this user?`)) {
+      statusMutation.mutate({ userId, status: newStatus });
+    }
+  };
 
   const users = apiResponse?.data || [];
   const meta = apiResponse?.meta || { total: 0, page: 1, limit: ITEMS_PER_PAGE, totalPages: 1 };
@@ -325,6 +364,8 @@ export default function UsersPageClient() {
                 key={user.userId}
                 user={user}
                 onViewDetails={() => setSelectedUser(user)}
+                onDelete={() => handleDeleteUser(user.userId)}
+                onToggleStatus={() => handleToggleStatus(user.userId, user.status)}
               />
             ))}
           </div>

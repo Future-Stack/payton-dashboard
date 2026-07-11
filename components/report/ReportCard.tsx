@@ -4,31 +4,47 @@ import { useState } from "react";
 import { FiTrash2, FiCheck } from "react-icons/fi";
 
 export type Report = {
-  id: number;
+  id: string;
   username: string;
-  avatar?: string;
+  avatar?: string | null;
   timeAgo: string;
-  status: "approved" | "tagged" | "pending";
+  confirmBite: number;
+  status:
+    | "APPROVED"
+    | "REMOVED"
+    | "PENDING"
+    | "approved"
+    | "tagged"
+    | "pending";
   flagCount?: number;
   grid: string;
   species: string;
+
+  // Extra fields for details modal
+  depth?: string;
+  position?: string;
+  method?: string;
+  bait?: string;
+  email?: string;
 };
 
 type ReportCardProps = {
   report: Report;
-  onApprove?: (id: number) => void;
-  onDelete?: (id: number) => void;
+  onApprove?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onViewDetails?: (report: Report) => void;
 };
 
 function getInitials(name: string) {
-  return name
-    .replace(/[^a-zA-Z]/g, "")
-    .slice(0, 2)
-    .toUpperCase();
+  return (
+    name
+      .replace(/[^a-zA-Z]/g, "")
+      .slice(0, 2)
+      .toUpperCase() || "US"
+  );
 }
 
-function getAvatarGradient(id: number) {
+function getAvatarGradient(id: string) {
   const gradients = [
     "from-[#2d6a9f] to-[#1a3f6f]",
     "from-[#2d7a6a] to-[#1a4f40]",
@@ -37,43 +53,20 @@ function getAvatarGradient(id: number) {
     "from-[#2d4a9f] to-[#1a2f6f]",
     "from-[#9f2d6a] to-[#6f1a40]",
   ];
-  return gradients[id % gradients.length];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % gradients.length;
+  return gradients[index];
 }
 
 export default function ReportCard({
   report,
-  onApprove,
-  onDelete,
   onViewDetails,
+  onDelete,
 }: ReportCardProps) {
   const [localStatus, setLocalStatus] = useState(report.status);
-  const [deleted, setDeleted] = useState(false);
-
-  if (deleted) return null;
-
-  function handleApprove() {
-    setLocalStatus("approved");
-    onApprove?.(report.id);
-  }
-
-  function handleDelete() {
-    setDeleted(true);
-    onDelete?.(report.id);
-  }
-
-  const statusLabel =
-    localStatus === "approved"
-      ? "approved"
-      : localStatus === "tagged"
-        ? "tagged"
-        : "pending";
-
-  const statusClass =
-    localStatus === "approved"
-      ? "bg-[#1a6a4a]/80 text-emerald-300 border border-emerald-700/40"
-      : localStatus === "tagged"
-        ? "bg-[#7c3a1a]/80 text-orange-300 border border-orange-700/40"
-        : "bg-[#1a2a5a]/80 text-blue-300 border border-blue-700/40";
 
   const showActionButtons = localStatus === "tagged";
 
@@ -90,15 +83,24 @@ export default function ReportCard({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
           {/* Avatar */}
-          <div
-            className={`
-              w-10 h-10 rounded-full bg-linear-to-br ${getAvatarGradient(report.id)}
-              flex items-center justify-center text-white font-bold text-xs
-              shrink-0 border-2 border-[#1f3252]/60 shadow-md
-            `}
-          >
-            {getInitials(report.username)}
-          </div>
+          {report.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={report.avatar}
+              alt={report.username}
+              className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-[#1f3252]/60 shadow-md"
+            />
+          ) : (
+            <div
+              className={`
+                w-10 h-10 rounded-full bg-linear-to-br ${getAvatarGradient(report.id)}
+                flex items-center justify-center text-white font-bold text-xs
+                shrink-0 border-2 border-[#1f3252]/60 shadow-md
+              `}
+            >
+              {getInitials(report.username)}
+            </div>
+          )}
 
           {/* Name + Time */}
           <div className="flex flex-col min-w-0">
@@ -113,23 +115,24 @@ export default function ReportCard({
 
         {/* Status Badge */}
         <div className="flex items-center gap-2 shrink-0">
-          {report.flagCount && (
+          {report.confirmBite && (
             <span
               className="text-[12px] text-[#FF6B35] font-semibold rounded-sm px-4 py-1"
               style={{
                 background: "rgba(255, 107, 53, 0.2)",
               }}
             >
-              {report.flagCount} flags
+              {report.confirmBite} flags
             </span>
           )}
+
           <span
             className={`
               text-[12px] text-[#FF6B35] font-semibold rounded-sm px-4 py-1 uppercase tracking-wide
-              ${statusClass}
+              ${report.status === "APPROVED" && "bg-[#10B981]/20 text-[#10B981]"}
             `}
           >
-            {statusLabel}
+            {report.status}
           </span>
         </div>
       </div>
@@ -175,7 +178,6 @@ export default function ReportCard({
           <button
             id={`approve-${report.id}`}
             aria-label={`Approve report by ${report.username}`}
-            onClick={handleApprove}
             className="
               w-10 h-10 rounded-xl bg-[#10B981]  
               border border-emerald-800/40 hover:border-emerald-600/60
@@ -191,8 +193,11 @@ export default function ReportCard({
         {/* Delete Button */}
         <button
           id={`delete-${report.id}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(report.id);
+          }}
           aria-label={`Delete report by ${report.username}`}
-          onClick={handleDelete}
           className="
             w-10 h-10 rounded-xl bg-[#FB2C36] hover:bg-[#4a2020]
             border border-red-900/40 
@@ -204,7 +209,6 @@ export default function ReportCard({
           <FiTrash2 className="w-4 h-4" />
         </button>
       </div>
-
     </div>
   );
 }

@@ -1,268 +1,168 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import {
   FiSearch,
   FiFilter,
   FiChevronLeft,
   FiChevronRight,
   FiX,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { TbRipple, TbMapPin, TbAnchor, TbFish } from "react-icons/tb";
 import ReportCard, { type Report } from "@/components/report/ReportCard";
+import { reportService } from "@/services/api/reportService";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 
-/* ─────────────────── Mock Data ─────────────────── */
-const ALL_REPORTS: Report[] = [
-  {
-    id: 1,
-    username: "CaptJohn_87",
-    timeAgo: "2 hours ago",
-    status: "approved",
-    grid: "C-12",
-    species: "Tuna",
-  },
-  {
-    id: 2,
-    username: "Jason Clip",
-    timeAgo: "4 hours ago",
-    status: "tagged",
-    flagCount: 3,
-    grid: "D-15",
-    species: "Snapper",
-  },
-  {
-    id: 3,
-    username: "DeepSeaMike",
-    timeAgo: "4 hours ago",
-    status: "tagged",
-    flagCount: 2,
-    grid: "D-15",
-    species: "Snapper",
-  },
-  {
-    id: 4,
-    username: "ReefRunner",
-    timeAgo: "6 hours ago",
-    status: "approved",
-    grid: "E-8",
-    species: "Grouper",
-  },
-  {
-    id: 5,
-    username: "Rutherford",
-    timeAgo: "6 hours ago",
-    status: "approved",
-    grid: "E-8",
-    species: "Snapper",
-  },
-  {
-    id: 6,
-    username: "AquaAngler",
-    timeAgo: "8 hours ago",
-    status: "tagged",
-    flagCount: 1,
-    grid: "B-4",
-    species: "Marlin",
-  },
-  {
-    id: 7,
-    username: "TidalWave99",
-    timeAgo: "10 hours ago",
-    status: "approved",
-    grid: "F-11",
-    species: "Wahoo",
-  },
-  {
-    id: 8,
-    username: "LakeLegend",
-    timeAgo: "12 hours ago",
-    status: "tagged",
-    flagCount: 4,
-    grid: "A-3",
-    species: "Bass",
-  },
-  {
-    id: 9,
-    username: "BaitMaster",
-    timeAgo: "1 day ago",
-    status: "approved",
-    grid: "G-9",
-    species: "Flounder",
-  },
-  {
-    id: 10,
-    username: "CoralDiver",
-    timeAgo: "1 day ago",
-    status: "tagged",
-    flagCount: 2,
-    grid: "C-7",
-    species: "Grouper",
-  },
-  {
-    id: 11,
-    username: "WaveCatcher",
-    timeAgo: "2 days ago",
-    status: "approved",
-    grid: "H-2",
-    species: "Tuna",
-  },
-  {
-    id: 12,
-    username: "FishingKing_01",
-    timeAgo: "2 days ago",
-    status: "tagged",
-    flagCount: 5,
-    grid: "B-6",
-    species: "Snapper",
-  },
-  {
-    id: 13,
-    username: "OceanExplorer",
-    timeAgo: "3 days ago",
-    status: "approved",
-    grid: "D-14",
-    species: "Sailfish",
-  },
-  {
-    id: 14,
-    username: "DeepBlueHook",
-    timeAgo: "3 days ago",
-    status: "tagged",
-    flagCount: 1,
-    grid: "E-5",
-    species: "Marlin",
-  },
-  {
-    id: 15,
-    username: "TroutTracker",
-    timeAgo: "4 days ago",
-    status: "approved",
-    grid: "A-10",
-    species: "Trout",
-  },
-  {
-    id: 16,
-    username: "SalmonSurfer",
-    timeAgo: "5 days ago",
-    status: "tagged",
-    flagCount: 3,
-    grid: "C-1",
-    species: "Salmon",
-  },
-];
-
-const ITEMS_PER_PAGE = 5;
-
+/* ─────────────────── Types & Constants ─────────────────── */
+const ITEMS_PER_PAGE = 10;
 type FilterTab = "All" | "Approved" | "Removed";
-type ReportStatus = "All" | "approved" | "tagged";
-type FlagCount = "All" | "Low (<3)" | "High (3+)";
+type UserSubscription = "All" | "FREE" | "PRO";
+type ReportStatus = "All" | "APPROVED" | "REMOVED" | "PENDING";
 
 type FilterState = {
   status: ReportStatus;
-  species: string;
-  flagCount: FlagCount;
+  userSubscription: UserSubscription;
 };
 
+function formatTimeAgo(dateString: string) {
+  if (!dateString) return "Unknown";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} hours ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} days ago`;
+}
+
 export default function ReportPageClient() {
+  // State
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
+
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>({
     status: "All",
-    species: "All",
-    flagCount: "All",
+    userSubscription: "All",
   });
   const [localFilter, setLocalFilter] = useState<FilterState>(filterState);
   const filterMenuRef = useRef<HTMLDivElement>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
-  const [removedIds, setRemovedIds] = useState<Set<number>>(new Set());
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  // API State with React Query
+  const { data, isLoading, isFetching, error: queryError, refetch } = useQuery({
+    queryKey: ["reports", { debouncedSearch, activeTab, filterState, currentPage }],
+    queryFn: async () => {
+      const params: any = {
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+      };
+
+      if (debouncedSearch) params.search = debouncedSearch;
+
+      if (activeTab === "Approved") {
+        params.status = "APPROVED";
+      } else if (activeTab === "Removed") {
+        params.status = "REMOVED";
+      } else if (filterState.status !== "All") {
+        params.status = filterState.status;
+      }
+
+      if (filterState.userSubscription !== "All") {
+        params.userSubscription = filterState.userSubscription;
+      }
+
+      const res = await reportService.getReports(params);
+      
+      const fetchedReports: Report[] = res.data.map(
+        (apiItem: any): Report => ({
+          id: apiItem.reportId,
+          username: apiItem.user?.name || "Unknown",
+          avatar: apiItem.user?.profileImage,
+          email: apiItem.user?.email,
+          timeAgo: formatTimeAgo(apiItem.submittedAt),
+          status: apiItem.status || "PENDING",
+          confirmBite: apiItem.confirmBite || 0,
+          flagCount: apiItem.confirmBite + apiItem.rejectBite,
+          grid: apiItem.zoneName || apiItem.zoneId || "Unknown",
+          species:
+            apiItem.species
+              ?.map((s: any) => `${s.quantity} ${s.speciesName}`)
+              .join(", ") || "Unknown",
+          depth: apiItem.depth,
+          position: apiItem.position,
+          method: apiItem.method,
+          bait: apiItem.bait,
+        })
+      );
+
+      return {
+        reports: fetchedReports,
+        totalCount: res.meta.total,
+        totalPages: res.meta.totalPages,
+      };
+    },
+    placeholderData: keepPreviousData,
+    retry: (failureCount, error: any) => {
+      const status = error?.response?.status;
+      if (status === 429 || status === 401 || status === 403 || status === 404) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+  });
+
+  const reports = data?.reports || [];
+  const totalCount = data?.totalCount || 0;
+  const totalPages = data?.totalPages || 1;
+  const error = queryError ? queryError.message : null;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => reportService.deleteReport(id),
+    onSuccess: () => {
+      toast.success("Report successfully removed");
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    },
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message || err.message || "Failed to delete report"
+      );
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
+  };
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Prevent background scrolling when modal is open
   useEffect(() => {
-    if (selectedReport) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [selectedReport]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        filterMenuRef.current &&
-        !filterMenuRef.current.contains(event.target as Node)
-      ) {
-        setFilterOpen(false);
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      if (mounted) {
+        setCurrentPage(1);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  /* ── Species list for filter ── */
-  const speciesList = useMemo(() => {
-    const all = ALL_REPORTS.map((r) => r.species);
-    return ["All", ...Array.from(new Set(all)).sort()];
-  }, []);
-
-  /* ── Filtered reports ── */
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return ALL_REPORTS.filter((r) => {
-      if (deletedIds.has(r.id)) return false;
-
-      const matchSearch =
-        !q ||
-        r.username.toLowerCase().includes(q) ||
-        r.species.toLowerCase().includes(q) ||
-        r.grid.toLowerCase().includes(q);
-
-      const matchSpecies =
-        filterState.species === "All" || r.species === filterState.species;
-
-      const matchStatus =
-        filterState.status === "All" || r.status === filterState.status;
-
-      const flags = r.flagCount || 0;
-      let matchFlags = true;
-      if (filterState.flagCount === "Low (<3)") matchFlags = flags < 3;
-      else if (filterState.flagCount === "High (3+)") matchFlags = flags >= 3;
-
-      const matchTab =
-        activeTab === "All"
-          ? true
-          : activeTab === "Approved"
-            ? r.status === "approved"
-            : removedIds.has(r.id); // "Removed" tab shows removed items
-
-      return (
-        matchSearch && matchSpecies && matchStatus && matchFlags && matchTab
-      );
-    });
-  }, [search, activeTab, filterState, deletedIds, removedIds]);
-
-  /* ── Pagination ── */
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginated = filtered.slice(
-    (safePage - 1) * ITEMS_PER_PAGE,
-    safePage * ITEMS_PER_PAGE,
-  );
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search, mounted]);
 
   function handleSearchChange(val: string) {
     setSearch(val);
-    setCurrentPage(1);
   }
 
   function handleTabChange(tab: FilterTab) {
@@ -270,21 +170,18 @@ export default function ReportPageClient() {
     setCurrentPage(1);
   }
 
-  function handleDelete(id: number) {
-    setDeletedIds((prev) => new Set(prev).add(id));
-    setRemovedIds((prev) => new Set(prev).add(id));
-  }
-
   function applyFilter() {
     setFilterState(localFilter);
     setFilterOpen(false);
     setCurrentPage(1);
+    if (localFilter.status !== "All") {
+      setActiveTab("All");
+    }
   }
 
   const activeFiltersCount =
     (filterState.status !== "All" ? 1 : 0) +
-    (filterState.species !== "All" ? 1 : 0) +
-    (filterState.flagCount !== "All" ? 1 : 0);
+    (filterState.userSubscription !== "All" ? 1 : 0);
 
   /* ── Page numbers with ellipsis ── */
   function getPageNumbers() {
@@ -292,11 +189,11 @@ export default function ReportPageClient() {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
     const pages: (number | "...")[] = [1];
-    if (safePage > 3) pages.push("...");
-    const start = Math.max(2, safePage - 1);
-    const end = Math.min(totalPages - 1, safePage + 1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
     for (let i = start; i <= end; i++) pages.push(i);
-    if (safePage < totalPages - 2) pages.push("...");
+    if (currentPage < totalPages - 2) pages.push("...");
     pages.push(totalPages);
     return pages;
   }
@@ -315,7 +212,7 @@ export default function ReportPageClient() {
             type="text"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Search users by name or email..."
+            placeholder="Search reports by user name or email..."
             className="w-full bg-[#19304A] border border-[#525D6D] text-white placeholder-[#7a8a9e]
                        pl-11 pr-4 py-3 rounded-2xl text-sm font-medium
                        focus:outline-none focus:border-[#ff6b35]/50 focus:ring-1 focus:ring-[#ff6b35]/20
@@ -345,7 +242,7 @@ export default function ReportPageClient() {
             )}
           </button>
 
-          {/* Serarch filter dropdown  */}
+          {/* Search filter dropdown  */}
           {filterOpen && (
             <div className="absolute right-0 top-12 z-50 w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-5 flex flex-col gap-4">
               {/* Report Status */}
@@ -353,82 +250,60 @@ export default function ReportPageClient() {
                 <span className="text-sm font-medium text-white">
                   Report Status
                 </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["All", "approved", "tagged"] as ReportStatus[]).map(
-                    (opt) => (
-                      <button
-                        key={opt}
-                        onClick={() =>
-                          setLocalFilter((p) => ({
-                            ...p,
-                            status: opt,
-                          }))
-                        }
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center capitalize ${
-                          localFilter.status === opt
-                            ? "bg-[#117A88] text-white"
-                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ),
-                  )}
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    ["All", "APPROVED", "REMOVED", "PENDING"] as ReportStatus[]
+                  ).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() =>
+                        setLocalFilter((p) => ({
+                          ...p,
+                          status: opt,
+                        }))
+                      }
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center capitalize ${
+                        localFilter.status === opt
+                          ? "bg-[#117A88] text-white"
+                          : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Flag Count */}
+              {/* User Subscription */}
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-white">
-                  Flag Count
+                  User Subscription
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["All", "Low (<3)", "High (3+)"] as FlagCount[]).map(
-                    (opt) => (
-                      <button
-                        key={opt}
-                        onClick={() =>
-                          setLocalFilter((p) => ({ ...p, flagCount: opt }))
-                        }
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
-                          localFilter.flagCount === opt
-                            ? "bg-[#117A88] text-white"
-                            : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              {/* Species */}
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-white">Species</span>
-                <div className="relative">
-                  <select
-                    value={localFilter.species}
-                    onChange={(e) =>
-                      setLocalFilter((p) => ({ ...p, species: e.target.value }))
-                    }
-                    className="w-full bg-[#2a3143] border border-[#393e46] text-white py-2 px-3 rounded-lg text-sm font-medium appearance-none focus:outline-none focus:border-[#117A88]"
-                  >
-                    {speciesList.map((species) => (
-                      <option key={species} value={species}>
-                        {species}
-                      </option>
-                    ))}
-                  </select>
+                  {(["All", "FREE", "PRO"] as UserSubscription[]).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() =>
+                        setLocalFilter((p) => ({ ...p, userSubscription: opt }))
+                      }
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center ${
+                        localFilter.userSubscription === opt
+                          ? "bg-[#117A88] text-white"
+                          : "bg-[#2a3143] text-slate-300 hover:bg-[#343c53] hover:text-white"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="pt-2">
                 <button
                   onClick={applyFilter}
-                  className="bg-[#ff6b35] hover:bg-[#ff6b35]/90 text-white py-2 px-6 rounded-lg text-sm font-semibold transition-colors"
+                  className="bg-[#ff6b35] hover:bg-[#ff6b35]/90 text-white w-full py-2 px-6 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
                 >
-                  Filter
+                  Apply Filter
                 </button>
               </div>
             </div>
@@ -438,46 +313,75 @@ export default function ReportPageClient() {
 
       {/* ── Reports Panel ── */}
       <div className="bg-[#19304A] border border-[#223C59] rounded-[20px] p-5 flex flex-col gap-4">
-        {/* ── Tab Filters ── */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              id={`tab-${tab.toLowerCase()}`}
-              onClick={() => handleTabChange(tab)}
-              className={`
-                px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200
-                ${
-                  activeTab === tab
-                    ? "bg-[#0a9396] text-white shadow-md shadow-cyan-900/30"
-                    : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60"
-                }
-              `}
-            >
-              {tab}
-            </button>
-          ))}
+        {/* ── Tab Filters & Refresh ── */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                id={`tab-${tab.toLowerCase()}`}
+                onClick={() => handleTabChange(tab)}
+                className={`
+                  px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer
+                  ${
+                    activeTab === tab
+                      ? "bg-[#0a9396] text-white shadow-md shadow-cyan-900/30"
+                      : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60"
+                  }
+                `}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-2 text-sm text-[#7a8a9e] hover:text-white transition-colors cursor-pointer"
+          >
+            <FiRefreshCw
+              className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
         </div>
 
         {/* ── Total Count ── */}
         <div>
           <h2 className="text-base font-bold text-white">
             Total{" "}
-            <span className="text-[#7a8a9e] font-semibold">
-              ({filtered.length})
-            </span>
+            <span className="text-[#7a8a9e] font-semibold">({totalCount})</span>
           </h2>
         </div>
 
-        {/* ── Report Cards ── */}
-        {paginated.length > 0 ? (
+        {/* ── Status & Error Handlers ── */}
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-red-400">
+            <p className="text-sm font-medium">Failed to load reports.</p>
+            <p className="text-xs opacity-60">{error}</p>
+            <button
+              onClick={() => refetch()}
+              className="mt-2 bg-[#ff6b35] hover:bg-[#ff6b35]/90 text-white py-1.5 px-4 rounded-md text-xs font-semibold cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isLoading ? (
           <div className="flex flex-col gap-3">
-            {paginated.map((report) => (
+            {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+              <div
+                key={i}
+                className="h-28 bg-[#1E3A5A]/50 border border-[#47596E]/50 rounded-2xl animate-pulse"
+              ></div>
+            ))}
+          </div>
+        ) : reports.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {reports.map((report) => (
               <ReportCard
                 key={report.id}
                 report={report}
+                onViewDetails={(r) => setSelectedReport(r)}
                 onDelete={handleDelete}
-                onViewDetails={(report) => setSelectedReport(report)}
               />
             ))}
           </div>
@@ -497,11 +401,11 @@ export default function ReportPageClient() {
             {/* Previous */}
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={safePage === 1}
+              disabled={currentPage === 1 || isLoading}
               className="
                 flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                 hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
-                transition-all
+                transition-all cursor-pointer
               "
             >
               <FiChevronLeft className="w-4 h-4" />
@@ -521,10 +425,11 @@ export default function ReportPageClient() {
                 <button
                   key={p}
                   onClick={() => setCurrentPage(p as number)}
+                  disabled={isLoading}
                   className={`
-                    w-9 h-9 rounded-lg text-sm font-semibold transition-all
+                    w-9 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 cursor-pointer
                     ${
-                      safePage === p
+                      currentPage === p
                         ? "bg-[#0a9396] text-white shadow-md shadow-cyan-900/30"
                         : "text-[#7a8a9e] hover:text-white hover:bg-[#1f2d40]/60"
                     }
@@ -538,11 +443,11 @@ export default function ReportPageClient() {
             {/* Next */}
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safePage === totalPages}
+              disabled={currentPage === totalPages || isLoading}
               className="
                 flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-white
                 hover:text-white hover:bg-[#1f2d40]/60 disabled:opacity-30 disabled:cursor-not-allowed
-                transition-all
+                transition-all cursor-pointer
               "
             >
               <span className="hidden sm:inline">Next</span>
@@ -590,7 +495,10 @@ export default function ReportPageClient() {
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
                       <span className="text-[#8B95A5] text-sm">User</span>
                       <span className="text-white text-sm font-medium">
-                        {selectedReport.username}
+                        {selectedReport.username}{" "}
+                        {selectedReport.email
+                          ? `(${selectedReport.email})`
+                          : ""}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
@@ -601,7 +509,7 @@ export default function ReportPageClient() {
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
                       <span className="text-[#8B95A5] text-sm">Species</span>
-                      <span className="text-white text-sm font-medium">
+                      <span className="text-white text-sm font-medium text-right max-w-[60%]">
                         {selectedReport.species}
                       </span>
                     </div>
@@ -609,9 +517,9 @@ export default function ReportPageClient() {
                       <span className="text-[#8B95A5] text-sm">Status</span>
                       <span
                         className={`text-sm font-bold uppercase ${
-                          selectedReport.status === "approved"
+                          selectedReport.status?.toLowerCase() === "approved"
                             ? "text-[#10B981]"
-                            : selectedReport.status === "tagged"
+                            : selectedReport.status?.toLowerCase() === "tagged"
                               ? "text-[#FF6B35]"
                               : "text-[#3B82F6]"
                         }`}
@@ -640,7 +548,7 @@ export default function ReportPageClient() {
                         <span className="text-[#8B95A5] text-sm">Depth</span>
                       </div>
                       <span className="text-white text-sm font-medium">
-                        120 ft
+                        {selectedReport.depth || "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
@@ -649,7 +557,7 @@ export default function ReportPageClient() {
                         <span className="text-[#8B95A5] text-sm">Position</span>
                       </div>
                       <span className="text-white text-sm font-medium">
-                        Suspended
+                        {selectedReport.position || "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
@@ -658,7 +566,7 @@ export default function ReportPageClient() {
                         <span className="text-[#8B95A5] text-sm">Method</span>
                       </div>
                       <span className="text-white text-sm font-medium">
-                        Trolling
+                        {selectedReport.method || "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
@@ -667,7 +575,7 @@ export default function ReportPageClient() {
                         <span className="text-[#8B95A5] text-sm">Bait</span>
                       </div>
                       <span className="text-white text-sm font-medium">
-                        Ballyhoo
+                        {selectedReport.bait || "N/A"}
                       </span>
                     </div>
                   </div>
