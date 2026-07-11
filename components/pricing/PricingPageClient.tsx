@@ -32,10 +32,14 @@ const MONTHLY_PLANS: Plan[] = [
     price: 0,
     period: "month",
     features: [
-      { text: "Delayed data (8 hours)" },
-      { text: "Limited reports view" },
-      { text: "Basic grid access" },
-      { text: "Community support" },
+      { text: "Submit Fishing Reports Included" },
+      { text: "Public Reports 72-hour delay" },
+      { text: "Heatmap Delayed" },
+      { text: "Report History Last 72 hours(72-hour delay)" },
+      { text: "Groups Join existing (Cannot create)" },
+      { text: "Weather Forecast Current + 2-day forecast" },
+      { text: "Notification System only (Account, password, announcements)" },
+      { text: "Future Premium Feature - Not included" },
     ],
   },
   {
@@ -46,46 +50,16 @@ const MONTHLY_PLANS: Plan[] = [
     period: "month",
     badge: { label: "POPULAR", color: "orange" },
     features: [
-      { text: "Real-time data" },
-      { text: "Unlimited reports" },
-      { text: "Full grid access" },
-      { text: "Weather forecasts" },
-      { text: "Priority support" },
-      { text: "Offline mode" },
-    ],
-  },
-];
-
-const YEARLY_PLANS: Plan[] = [
-  {
-    id: "free-yearly",
-    name: "Free",
-    description: "Basic access for casual anglers",
-    price: 0,
-    period: "year",
-    features: [
-      { text: "Delayed data (8 hours)" },
-      { text: "Limited reports view" },
-      { text: "Basic grid access" },
-      { text: "Community support" },
-    ],
-  },
-  {
-    id: "pro-yearly",
-    name: "Pro",
-    description: "Full access for serious anglers",
-    price: 99.99,
-    period: "year",
-    badge: { label: "BEST VALUE", color: "teal" },
-    savingsText: "Save $19.89/year",
-    features: [
-      { text: "Real-time data" },
-      { text: "Unlimited reports" },
-      { text: "Full grid access" },
-      { text: "Weather forecasts" },
-      { text: "Priority support" },
-      { text: "Offline mode" },
-      { text: "2 months free" },
+      { text: "Submit Fishing Reports Included" },
+      { text: "Public Reports Real-time" },
+      { text: "Heatmap Live" },
+      { text: "Report History Unlimited history (Real-time access)" },
+      { text: "Groups Create & manage groups" },
+      { text: "Weather Forecast 5-day extended forecast" },
+      {
+        text: "Notification All fishing notifications (Hot bites, new reports, weather alerts, group messages)",
+      },
+      { text: "Future Premium Feature - included" },
     ],
   },
 ];
@@ -233,7 +207,7 @@ export default function PricingPageClient() {
         </div>
 
         {/* Edit Button */}
-        <button
+        {/* <button
           id="pricing-edit-btn"
           onClick={() => setEditMode((prev) => !prev)}
           className="
@@ -244,13 +218,12 @@ export default function PricingPageClient() {
         >
           <FiEdit2 className="w-4 h-4" />
           <span>{editMode ? "Done" : "Edit"}</span>
-        </button>
+        </button> */}
       </div>
 
       {/* ── Plan Sections ── */}
       <div className="flex flex-col gap-6">
         <PlanSection title="Monthly Plans" plans={MONTHLY_PLANS} />
-        <PlanSection title="Yearly Plans" plans={YEARLY_PLANS} />
       </div>
     </div>
   );
