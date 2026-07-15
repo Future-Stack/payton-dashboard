@@ -25,14 +25,12 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a9396]/60 ${
-        checked ? "bg-[#0a9396]" : "bg-[#1e2d42]"
-      }`}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a9396]/60 ${checked ? "bg-[#0a9396]" : "bg-[#1e2d42]"
+        }`}
     >
       <span
-        className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
-          checked ? "translate-x-6" : "translate-x-0.75px"
-        }`}
+        className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${checked ? "translate-x-6" : "translate-x-0.75px"
+          }`}
       />
     </button>
   );
@@ -109,11 +107,11 @@ function SliderRow({
     <div
       className="py-4 border-b border-[#1a2d45]/50 last:border-b-0"
 
-      //     style={{
-      //       borderRadius: '16px',
-      // border: '1px solid rgba(255, 255, 255, 0.10)',
-      // background: '#1E3A5A'
-      //     }}
+    //     style={{
+    //       borderRadius: '16px',
+    // border: '1px solid rgba(255, 255, 255, 0.10)',
+    // background: '#1E3A5A'
+    //     }}
     >
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-medium text-white">{title}</p>
@@ -195,11 +193,10 @@ export default function SettingsPageClient() {
       {/* ── Toast Notification ── */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium text-white transition-all duration-300 animate-fade-in ${
-            toast.type === "success"
-              ? "bg-[#0a9396] shadow-cyan-900/30"
-              : "bg-[#1e2d42] shadow-slate-900/50"
-          }`}
+          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium text-white transition-all duration-300 animate-fade-in ${toast.type === "success"
+            ? "bg-[#0a9396] shadow-cyan-900/30"
+            : "bg-[#1e2d42] shadow-slate-900/50"
+            }`}
         >
           {toast.type === "success" ? (
             <FiSave className="w-4 h-4 shrink-0" />

@@ -42,4 +42,12 @@ export const userService = {
     const response = await apiClient.patch(`/admin/users/${userId}/status`, { status });
     return response.data;
   },
+  updateProfile: async (formData: FormData): Promise<any> => {
+    const response = await apiClient.patch(`/user/profile-update`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };

@@ -26,7 +26,6 @@ export type Report = {
   method?: string;
   bait?: string;
   email?: string;
-  fishingPatterns?: any[];
 };
 
 type ReportCardProps = {

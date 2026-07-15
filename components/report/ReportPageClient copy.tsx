@@ -99,20 +99,13 @@ export default function ReportPageClient() {
           flagCount: apiItem.confirmBite + apiItem.rejectBite,
           grid: apiItem.zoneName || apiItem.zoneId || "Unknown",
           species:
-            apiItem.allSpecies
+            apiItem.species
               ?.map((s: any) => `${s.quantity} ${s.speciesName}`)
               .join(", ") || "Unknown",
-          depth: apiItem.fishingPatterns?.length
-            ? Array.from(new Set(apiItem.fishingPatterns.map((p: any) => p.waterDepthFt ? `${p.waterDepthFt} ft` : null).filter(Boolean))).join(", ") || "N/A"
-            : "N/A",
+          depth: apiItem.depth,
           position: apiItem.position,
-          method: apiItem.fishingPatterns?.length
-            ? Array.from(new Set(apiItem.fishingPatterns.map((p: any) => p.fishingMethod).filter(Boolean))).join(", ") || "N/A"
-            : "N/A",
-          bait: apiItem.fishingPatterns?.length
-            ? Array.from(new Set(apiItem.fishingPatterns.map((p: any) => p.baitLureType).filter(Boolean))).join(", ") || "N/A"
-            : "N/A",
-          fishingPatterns: apiItem.fishingPatterns,
+          method: apiItem.method,
+          bait: apiItem.bait,
         })
       );
 
@@ -539,106 +532,49 @@ export default function ReportPageClient() {
                 </div>
 
                 {/* Fishing Details Container */}
-                {selectedReport.fishingPatterns && selectedReport.fishingPatterns.length > 0 ? (
-                  <div className="flex flex-col gap-4">
-                    <h3 className="text-white font-semibold text-lg">
-                      Fishing Patterns
-                    </h3>
-                    {selectedReport.fishingPatterns.map((pattern: any, idx: number) => (
-                      <div key={pattern.id || idx} className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-white font-medium text-md">
-                            Pattern {idx + 1} {pattern.species?.length ? `- ${pattern.species.map((s: any) => `${s.quantity} ${s.speciesName}`).join(', ')}` : ''}
-                          </h4>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                            <div className="flex items-center gap-2 text-cyan-400">
-                              <TbRipple className="w-5 h-5" />
-                              <span className="text-[#8B95A5] text-sm">Depth & Column</span>
-                            </div>
-                            <span className="text-white text-sm font-medium">
-                              {pattern.waterDepthFt ? `${pattern.waterDepthFt} ft` : "N/A"} {pattern.waterColumn ? `(${pattern.waterColumn})` : ""}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                            <div className="flex items-center gap-2 text-indigo-400">
-                              <TbAnchor className="w-5 h-5" />
-                              <span className="text-[#8B95A5] text-sm">Method</span>
-                            </div>
-                            <span className="text-white text-sm font-medium text-right max-w-[60%]">
-                              {pattern.fishingMethod || "N/A"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                            <div className="flex items-center gap-2 text-teal-400">
-                              <TbFish className="w-5 h-5" />
-                              <span className="text-[#8B95A5] text-sm">Bait / Lure</span>
-                            </div>
-                            <span className="text-white text-sm font-medium text-right max-w-[60%]">
-                              {pattern.baitLureType || "N/A"}
-                            </span>
-                          </div>
-                        </div>
+                <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
+                  <h3 className="text-white font-semibold text-lg mb-4">
+                    Fishing Details
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-cyan-400">
+                        <TbRipple className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Depth</span>
                       </div>
-                    ))}
-                    <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0 mt-2">
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                        <div className="flex items-center gap-2 text-blue-400">
-                          <TbMapPin className="w-5 h-5" />
-                          <span className="text-[#8B95A5] text-sm">Position</span>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {selectedReport.position || "N/A"}
-                        </span>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.depth || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-blue-400">
+                        <TbMapPin className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Position</span>
                       </div>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.position || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-indigo-400">
+                        <TbAnchor className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Method</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.method || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
+                      <div className="flex items-center gap-2 text-teal-400">
+                        <TbFish className="w-5 h-5" />
+                        <span className="text-[#8B95A5] text-sm">Bait</span>
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        {selectedReport.bait || "N/A"}
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <div className="bg-[#242933] border border-[#2A303C] rounded-2xl p-4 shrink-0">
-                    <h3 className="text-white font-semibold text-lg mb-4">
-                      Fishing Details
-                    </h3>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                        <div className="flex items-center gap-2 text-cyan-400">
-                          <TbRipple className="w-5 h-5" />
-                          <span className="text-[#8B95A5] text-sm">Depth</span>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {selectedReport.depth || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                        <div className="flex items-center gap-2 text-blue-400">
-                          <TbMapPin className="w-5 h-5" />
-                          <span className="text-[#8B95A5] text-sm">Position</span>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {selectedReport.position || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                        <div className="flex items-center gap-2 text-indigo-400">
-                          <TbAnchor className="w-5 h-5" />
-                          <span className="text-[#8B95A5] text-sm">Method</span>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {selectedReport.method || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 rounded-xl bg-[#2C323E]">
-                        <div className="flex items-center gap-2 text-teal-400">
-                          <TbFish className="w-5 h-5" />
-                          <span className="text-[#8B95A5] text-sm">Bait</span>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {selectedReport.bait || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>,

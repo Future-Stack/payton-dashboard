@@ -12,6 +12,7 @@ import {
   FiSettings,
   FiLogOut,
   FiX,
+  FiUser,
 } from "react-icons/fi";
 import { BiWalletAlt } from "react-icons/bi";
 
@@ -52,10 +53,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       path: "/dashboard/pricing",
       icon: BiWalletAlt,
     },
+    // {
+    //   name: "Settings",
+    //   path: "/dashboard/settings",
+    //   icon: FiSettings,
+    // },
     {
-      name: "Settings",
-      path: "/dashboard/settings",
-      icon: FiSettings,
+      name: "Profile",
+      path: "/dashboard/profile",
+      icon: FiUser,
     },
   ];
 
