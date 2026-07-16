@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Image from "next/image";
@@ -8,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { authService } from "@/services/api/authService";
+import { userService } from "@/services/api/userService";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -37,24 +39,44 @@ export default function Home() {
 
   const loginMutation = useMutation({
     mutationFn: (data: LoginFormValues) => authService.login(data),
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       if (data.data?.accessToken && data.data?.refreshToken) {
         let userId: string | number = 1;
         try {
-          const base64Url = data.data.accessToken.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
+          const base64Url = data.data.accessToken.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map(function (c) {
+                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join(""),
+          );
           const decoded = JSON.parse(jsonPayload);
           userId = decoded.sub || 1;
         } catch (e) {
           console.error("Failed to decode token", e);
         }
 
-        setAuth(data.data.accessToken, data.data.refreshToken, { id: userId, email: variables.email });
-        toast.success(data.message || "Login successful");
-        router.push("/dashboard");
+        setAuth(data.data.accessToken, data.data.refreshToken, {
+          id: userId,
+          email: variables.email,
+        });
+
+        try {
+          const profileRes = await userService.getMe();
+          if (profileRes.data.role === 'ADMIN') {
+            toast.success(data.message || "Login successful");
+            router.push("/dashboard");
+          } else {
+            useAuthStore.getState().logout();
+            toast.error("Unauthorized: Admin access only");
+          }
+        } catch (error) {
+          useAuthStore.getState().logout();
+          toast.error("Failed to verify user role");
+        }
       } else {
         toast.error("Invalid response from server");
       }

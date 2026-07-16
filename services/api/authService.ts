@@ -1,4 +1,5 @@
-import { apiClient } from './axios';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { apiClient } from "./axios";
 
 export interface LoginPayload {
   email: string;
@@ -60,21 +61,39 @@ export interface ResetPasswordResponse {
 
 export const authService = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', payload);
+    const response = await apiClient.post<LoginResponse>(
+      "/auth/login",
+      payload,
+    );
     return response.data;
   },
-  refreshToken: async (payload: RefreshTokenPayload): Promise<RefreshTokenResponse> => {
-    // using raw axios or api without interceptors if possible to avoid loops, 
+  refreshToken: async (
+    payload: RefreshTokenPayload,
+  ): Promise<RefreshTokenResponse> => {
+    // using raw axios or api without interceptors if possible to avoid loops,
     // but apiClient could be okay if we manage isRefreshing in axios.ts
-    const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh-token', payload);
+    const response = await apiClient.post<RefreshTokenResponse>(
+      "/auth/refresh-token",
+      payload,
+    );
     return response.data;
   },
-  forgetPassword: async (payload: ForgetPasswordPayload): Promise<ForgetPasswordResponse> => {
-    const response = await apiClient.post<ForgetPasswordResponse>('/auth/forget-password', payload);
+  forgetPassword: async (
+    payload: ForgetPasswordPayload,
+  ): Promise<ForgetPasswordResponse> => {
+    const response = await apiClient.post<ForgetPasswordResponse>(
+      "/auth/forget-password",
+      payload,
+    );
     return response.data;
   },
-  resetPassword: async (payload: ResetPasswordPayload): Promise<ResetPasswordResponse> => {
-    const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', payload);
+  resetPassword: async (
+    payload: ResetPasswordPayload,
+  ): Promise<ResetPasswordResponse> => {
+    const response = await apiClient.post<ResetPasswordResponse>(
+      "/auth/reset-password",
+      payload,
+    );
     return response.data;
   },
 };

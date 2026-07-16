@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // The base URL from the requirements
-const BASE_URL = "http://172.252.13.68:8000/api/v1";
+// const BASE_URL = "http://172.252.13.68:8000/api/v1";
+const BASE_URL = "https://onthebitefishing.com/api/v1";
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -55,7 +57,7 @@ apiClient.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            originalRequest.headers["Authorization"] = "Bearer " + token;
             return apiClient(originalRequest);
           })
           .catch((err) => {
@@ -73,7 +75,7 @@ apiClient.interceptors.response.use(
       if (!refreshToken || !userId) {
         state.logout();
         if (typeof window !== "undefined") {
-          window.location.href = '/login';
+          window.location.href = "/";
         }
         return Promise.reject(error);
       }
@@ -87,23 +89,25 @@ apiClient.interceptors.response.use(
           .then(({ data }) => {
             if (data?.data?.accessToken && data?.data?.refreshToken) {
               state.setTokens(data.data.accessToken, data.data.refreshToken);
-              apiClient.defaults.headers.common['Authorization'] = 'Bearer ' + data.data.accessToken;
-              originalRequest.headers['Authorization'] = 'Bearer ' + data.data.accessToken;
+              apiClient.defaults.headers.common["Authorization"] =
+                "Bearer " + data.data.accessToken;
+              originalRequest.headers["Authorization"] =
+                "Bearer " + data.data.accessToken;
               processQueue(null, data.data.accessToken);
               resolve(apiClient(originalRequest));
             } else {
               state.logout();
               if (typeof window !== "undefined") {
-                window.location.href = '/login';
+                window.location.href = "/login";
               }
-              processQueue(new Error('Failed to refresh token'));
+              processQueue(new Error("Failed to refresh token"));
               reject(error);
             }
           })
           .catch((err) => {
             state.logout();
             if (typeof window !== "undefined") {
-              window.location.href = '/login';
+              window.location.href = "/login";
             }
             processQueue(err, null);
             reject(err);
