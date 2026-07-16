@@ -21,6 +21,8 @@ export default function Cards({
 }: CardsProps) {
   const [isMounted, setIsMounted] = useState(false);
 
+  console.log(stats)
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -102,7 +104,8 @@ export default function Cards({
     stroke: { show: false },
     dataLabels: { enabled: false },
     legend: { show: false },
-    colors: ["#00897b", "#fd5c28"],
+    colors: ["#fd5c28", "#00897b"],
+    labels: ["Total Report", "Today"],
     plotOptions: {
       pie: {
         expandOnClick: false,
@@ -112,8 +115,8 @@ export default function Cards({
     tooltip: { enabled: true },
   };
   const reportsDonutSeries = [
+    stats.reports.total,
     stats.reports.today,
-    Math.max(0, stats.reports.total - stats.reports.today),
   ];
 
   /* ─────────────── Card 4: Total Revenue ─────────────── */

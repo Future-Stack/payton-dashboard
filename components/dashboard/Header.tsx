@@ -16,7 +16,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const notifRef = useRef<HTMLDivElement>(null);
 
   const { data: userProfileResponse, isLoading } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ["userProfile"],
     queryFn: userService.getMe,
     retry: false,
   });
@@ -60,7 +60,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </button>
 
         {/* Search Bar */}
-        <div className="relative group flex-1">
+        {/* <div className="relative group flex-1">
           <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8f9cae] w-4 h-4 transition-colors group-focus-within:text-[#ff6b35] pointer-events-none" />
           <input
             id="dashboard-search"
@@ -76,13 +76,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
               background: "rgba(255, 255, 255, 0.20)",
             }}
           />
-        </div>
+        </div> */}
       </div>
 
       {/* ── Right: Bell + Profile ── */}
       <div className="flex items-center gap-3 ml-4">
         {/* Notification Bell */}
-        <div className="relative" ref={notifRef}>
+        {/* <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotificationOpen((p) => !p)}
             aria-label="Notifications"
@@ -94,7 +94,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               background: "rgba(255, 255, 255, 0.20)",
             }}
           >
-            {/* <FiBell className="w-4.5 h-4.5" /> */}
+           
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -115,11 +115,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 strokeLinejoin="round"
               />
             </svg>
-            {/* Dot indicator */}
+         
             <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-white rounded-full ring-2 ring-[#1b2336]" />
           </button>
-
-          {/* Notification Dropdown */}
+ 
           {notificationOpen && (
             <div className="absolute right-[-60px] sm:right-0 top-14 z-50 w-[300px] sm:w-[320px] bg-[#222831] border border-[#393e46] rounded-xl shadow-2xl shadow-black/60 p-4 sm:p-5 flex flex-col gap-4 animate-fade-in">
               <div className="flex items-center justify-between border-b border-[#393e46] pb-2">
@@ -127,7 +126,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <span className="text-[#ff6b35] text-xs font-medium bg-[#ff6b35]/10 px-2 py-0.5 rounded-full">3 New</span>
               </div>
               <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
-                {/* Mock Notification Items */}
+               
                 <div className="p-3 bg-[#2a3143]/50 hover:bg-[#2a3143] rounded-xl transition-colors cursor-pointer border border-[#393e46]/50">
                   <p className="text-sm text-slate-200 font-medium mb-1">New User Registration</p>
                   <p className="text-xs text-slate-400">CaptJohn_87 just signed up as a PRO member.</p>
@@ -151,7 +150,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Profile Card */}
         <div
@@ -168,7 +167,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                        flex items-center justify-center text-white shadow-sm shrink-0"
           >
             {user?.profileImage ? (
-              <Image src={user.profileImage} alt="avatar" width={42} height={42} className="w-full h-full object-cover" />
+              <Image
+                src={user.profileImage}
+                alt="avatar"
+                width={42}
+                height={42}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <UserRound className="w-6 h-6 text-slate-300" />
             )}
@@ -177,10 +182,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* User Details - hidden on very small screens */}
           <div className="hidden sm:flex flex-col leading-tight">
             <span className="text-sm font-semibold text-white truncate max-w-[150px]">
-              {isLoading ? "Loading..." : (user?.name || "User")}
+              {isLoading ? "Loading..." : user?.name || "User"}
             </span>
             <span className="text-[11px] text-white font-medium mt-1 truncate max-w-[150px]">
-              {isLoading ? "..." : (user?.email || "")}
+              {isLoading ? "..." : user?.email || ""}
             </span>
           </div>
         </div>
