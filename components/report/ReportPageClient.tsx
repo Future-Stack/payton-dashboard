@@ -87,7 +87,16 @@ export default function ReportPageClient() {
 
       const res = await reportService.getReports(params);
 
-      const fetchedReports: Report[] = res.data.map(
+      let filteredData = res.data || [];
+      if (activeTab === "Approved") {
+        filteredData = filteredData.filter((item: any) => item.status === "APPROVED");
+      } else if (activeTab === "Removed") {
+        filteredData = filteredData.filter((item: any) => item.status === "REMOVED");
+      } else if (filterState.status !== "All") {
+        filteredData = filteredData.filter((item: any) => item.status === filterState.status);
+      }
+
+      const fetchedReports: Report[] = filteredData.map(
         (apiItem: any): Report => ({
           id: apiItem.reportId,
           username: apiItem.user?.name || "Unknown",
@@ -118,8 +127,8 @@ export default function ReportPageClient() {
 
       return {
         reports: fetchedReports,
-        totalCount: res.meta.total,
-        totalPages: res.meta.totalPages,
+        totalCount: (activeTab !== "All" || filterState.status !== "All") ? filteredData.length : res.meta.total,
+        totalPages: (activeTab !== "All" || filterState.status !== "All") ? Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1 : res.meta.totalPages,
       };
     },
     placeholderData: keepPreviousData,
