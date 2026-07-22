@@ -187,12 +187,16 @@ export default function UserCard({
           </span>
           <span
             className={`text-[14px] font-bold ${
-              user.subscription.plan !== "FREE"
+              user.subscription?.plan === "PRO" &&
+              user.subscription?.status === "ACTIVE"
                 ? "text-[#ff6b35]"
                 : "text-[#94a3b8]"
             }`}
           >
-            {user.subscription.plan}
+            {user.subscription?.plan === "PRO" &&
+            user.subscription?.status === "ACTIVE"
+              ? "PRO"
+              : "FREE"}
           </span>
         </div>
 

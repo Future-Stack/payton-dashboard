@@ -558,9 +558,17 @@ export default function UsersPageClient() {
                   <div className="flex flex-col gap-1">
                     <span className="text-sm text-[#7a8a9e]">Access Level</span>
                     <span
-                      className={`text-sm font-bold uppercase ${selectedUser.subscription.plan !== "FREE" ? "text-[#ff6b35]" : "text-[#94a3b8]"}`}
+                      className={`text-sm font-bold uppercase ${
+                        selectedUser.subscription?.plan === "PRO" &&
+                        selectedUser.subscription?.status === "ACTIVE"
+                          ? "text-[#ff6b35]"
+                          : "text-[#94a3b8]"
+                      }`}
                     >
-                      {selectedUser.subscription.plan}
+                      {selectedUser.subscription?.plan === "PRO" &&
+                      selectedUser.subscription?.status === "ACTIVE"
+                        ? "PRO"
+                        : "FREE"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
