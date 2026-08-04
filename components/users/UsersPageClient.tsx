@@ -8,6 +8,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiX,
+  FiRefreshCw,
 } from "react-icons/fi";
 import UserCard, { type ApiUser } from "@/components/users/UserCard";
 import Image from "next/image";
@@ -73,6 +74,8 @@ export default function UsersPageClient() {
 
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [changePlanTarget, setChangePlanTarget] = useState<ApiUser | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<"PRO" | "FREE">("FREE");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -171,14 +174,55 @@ export default function UsersPageClient() {
     },
   });
 
+  const changePlanMutation = useMutation({
+    mutationFn: ({ userId, plan }: { userId: string; plan: "PRO" | "FREE" }) =>
+      userService.changePlan(userId, plan),
+    onSuccess: (_data, variables) => {
+      toast.success(`Plan successfully changed to ${variables.plan}`);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setChangePlanTarget(null);
+      // Optimistically update the details modal so the badge reflects immediately
+      if (selectedUser && selectedUser.userId === variables.userId) {
+        setSelectedUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                subscription: {
+                  ...(prev.subscription ?? {}),
+                  plan: variables.plan,
+                  status: variables.plan === "PRO" ? "ACTIVE" : prev.subscription?.status,
+                },
+              }
+            : prev,
+        );
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to change plan");
+    },
+  });
+
   const handleDeleteUser = (userId: string) => {
     deleteMutation.mutate(userId);
   };
 
   const handleToggleStatus = (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === "ACTIVE" ? "SUSPEND" : "ACTIVE";
-
     statusMutation.mutate({ userId, status: newStatus });
+  };
+
+  const handleOpenChangePlan = (user: ApiUser) => {
+    const currentPlan =
+      user.subscription?.plan === "PRO" && user.subscription?.status === "ACTIVE"
+        ? "PRO"
+        : "FREE";
+    setSelectedPlan(currentPlan);
+    setChangePlanTarget(user);
+  };
+
+  const handleConfirmChangePlan = () => {
+    if (!changePlanTarget) return;
+    changePlanMutation.mutate({ userId: changePlanTarget.userId, plan: selectedPlan });
   };
 
   const users = apiResponse?.data || [];
@@ -430,6 +474,7 @@ export default function UsersPageClient() {
                 onToggleStatus={() =>
                   handleToggleStatus(user.userId, user.status)
                 }
+                onChangePlan={() => handleOpenChangePlan(user)}
               />
             ))}
           </div>
@@ -597,6 +642,122 @@ export default function UsersPageClient() {
                     </span>
                   </div>
                 </div>
+
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* ── Change Plan Modal ── */}
+      {mounted &&
+        changePlanTarget &&
+        createPortal(
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-[#1e2330]/85 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#1a2535] w-full max-w-sm rounded-2xl border border-[#2e3d55] shadow-2xl overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#2e3d55]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#117A88]/20 flex items-center justify-center">
+                    <FiRefreshCw className="w-4 h-4 text-[#4ec9da]" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">Change Plan</h3>
+                </div>
+                <button
+                  id="close-change-plan-modal"
+                  onClick={() => setChangePlanTarget(null)}
+                  disabled={changePlanMutation.isPending}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[#303846] text-[#7a8a9e] hover:text-white hover:bg-[#3d4759] transition-colors disabled:opacity-40"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-5 py-5 flex flex-col gap-5">
+                {/* User info */}
+                <div className="flex items-center gap-3 bg-[#19304A] rounded-xl px-4 py-3 border border-[#223C59]">
+                  {changePlanTarget.profileImage ? (
+                    <Image
+                      src={changePlanTarget.profileImage}
+                      alt="Avatar"
+                      width={36}
+                      height={36}
+                      className="rounded-full object-cover w-9 h-9"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#3a4f70] to-[#243050] flex items-center justify-center text-white font-bold text-sm shrink-0 border-2 border-[#2a3a58]">
+                      {changePlanTarget.name
+                        ? changePlanTarget.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()
+                        : "U"}
+                    </div>
+                  )}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-white truncate">{changePlanTarget.name}</span>
+                    <span className="text-xs text-[#7a8a9e] truncate">{changePlanTarget.email}</span>
+                  </div>
+                </div>
+
+                {/* Plan selector */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-medium text-[#7a8a9e] uppercase tracking-wide">Select Plan</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(["FREE", "PRO"] as const).map((plan) => (
+                      <button
+                        key={plan}
+                        id={`plan-option-${plan.toLowerCase()}`}
+                        onClick={() => setSelectedPlan(plan)}
+                        disabled={changePlanMutation.isPending}
+                        className={`relative flex flex-col items-center gap-1.5 py-4 px-3 rounded-xl border-2 transition-all duration-200 ${
+                          selectedPlan === plan
+                            ? plan === "PRO"
+                              ? "border-[#ff6b35] bg-[#ff6b35]/10 text-[#ff6b35]"
+                              : "border-[#117A88] bg-[#117A88]/10 text-[#4ec9da]"
+                            : "border-[#2e3d55] bg-[#19304A] text-[#7a8a9e] hover:border-[#3d5070]"
+                        } disabled:opacity-50`}
+                      >
+                        {selectedPlan === plan && (
+                          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-current" />
+                        )}
+                        <span className="text-base font-bold">{plan}</span>
+                        <span className="text-[10px] font-medium opacity-75">
+                          {plan === "PRO" ? "Premium access" : "Basic access"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 px-5 pb-5">
+                <button
+                  id="cancel-change-plan-btn"
+                  onClick={() => setChangePlanTarget(null)}
+                  disabled={changePlanMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl border border-[#2e3d55] text-sm font-semibold text-[#7a8a9e] hover:text-white hover:border-[#3d5070] transition-colors disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="confirm-change-plan-btn"
+                  onClick={handleConfirmChangePlan}
+                  disabled={changePlanMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed
+                             bg-[#117A88] hover:bg-[#0e6572] text-white flex items-center justify-center gap-2"
+                >
+                  {changePlanMutation.isPending ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      Applying…
+                    </>
+                  ) : (
+                    "Confirm"
+                  )}
+                </button>
               </div>
             </div>
           </div>,

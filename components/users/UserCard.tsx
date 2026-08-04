@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, CheckCircle } from "lucide-react";
+import { Ban, CheckCircle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { FiMoreVertical, FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
@@ -20,6 +20,8 @@ export type ApiUser = {
     plan: string;
     status: string;
     currentPeriodEnd: string | null;
+    isGrantedByAdmin?: boolean;
+    adminGrantedAt?: string | null;
   };
 };
 
@@ -28,6 +30,7 @@ type UserCardProps = {
   onViewDetails?: () => void;
   onDelete?: () => void;
   onToggleStatus?: () => void;
+  onChangePlan?: () => void;
 };
 
 function DropdownMenu({
@@ -99,6 +102,7 @@ export default function UserCard({
   onViewDetails,
   onDelete,
   onToggleStatus,
+  onChangePlan,
 }: UserCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -157,24 +161,34 @@ export default function UserCard({
           </div>
         </div>
 
-        {/* Dots Menu */}
-        <div className="relative shrink-0">
+        {/* Edit Plan + Dots Menu */}
+        <div className="flex items-center gap-1 shrink-0">
           <button
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="User options"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#7a8a9e] hover:text-white hover:bg-[#243050] transition-all"
+            onClick={onChangePlan}
+            aria-label="Change plan"
+            title="Change Plan"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#4ec9da] hover:text-white hover:bg-[#117A88]/30 transition-all"
           >
-            <FiMoreVertical className="w-4 h-4" />
+            <FiEdit2 className="w-3.5 h-3.5" />
           </button>
-          {menuOpen && (
-            <DropdownMenu
-              onClose={() => setMenuOpen(false)}
-              onViewDetails={onViewDetails}
-              onDelete={onDelete}
-              onToggleStatus={onToggleStatus}
-              userStatus={user.status}
-            />
-          )}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="User options"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#7a8a9e] hover:text-white hover:bg-[#243050] transition-all"
+            >
+              <FiMoreVertical className="w-4 h-4" />
+            </button>
+            {menuOpen && (
+              <DropdownMenu
+                onClose={() => setMenuOpen(false)}
+                onViewDetails={onViewDetails}
+                onDelete={onDelete}
+                onToggleStatus={onToggleStatus}
+                userStatus={user.status}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -185,19 +199,27 @@ export default function UserCard({
           <span className="text-[12px] text-[#DFE3E8] uppercase tracking-wider font-medium">
             Access Level
           </span>
-          <span
-            className={`text-[14px] font-bold ${
-              user.subscription?.plan === "PRO" &&
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className={`text-[14px] font-bold ${
+                user.subscription?.plan === "PRO" &&
+                user.subscription?.status === "ACTIVE"
+                  ? "text-[#ff6b35]"
+                  : "text-[#94a3b8]"
+              }`}
+            >
+              {user.subscription?.plan === "PRO" &&
               user.subscription?.status === "ACTIVE"
-                ? "text-[#ff6b35]"
-                : "text-[#94a3b8]"
-            }`}
-          >
-            {user.subscription?.plan === "PRO" &&
-            user.subscription?.status === "ACTIVE"
-              ? "PRO"
-              : "FREE"}
-          </span>
+                ? "PRO"
+                : "FREE"}
+            </span>
+            {user.subscription?.isGrantedByAdmin === true && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#117A88]/15 border border-[#117A88]/40 text-[#4ec9da] text-[10px] font-semibold tracking-wide leading-none">
+                <ShieldCheck className="w-2.5 h-2.5 shrink-0" />
+                By Admin
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Reports */}
