@@ -42,6 +42,10 @@ export const userService = {
     const response = await apiClient.patch(`/admin/users/${userId}/status`, { status });
     return response.data;
   },
+  changePlan: async (userId: string, plan: "PRO" | "FREE"): Promise<any> => {
+    const response = await apiClient.patch(`/admin/users/${userId}/change-plan`, { plan });
+    return response.data;
+  },
   updateProfile: async (formData: FormData): Promise<any> => {
     const response = await apiClient.patch(`/user/profile-update`, formData, {
       headers: {
