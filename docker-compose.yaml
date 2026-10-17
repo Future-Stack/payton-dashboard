@@ -1,0 +1,14 @@
+services:
+  dashboard:
+    image: softvence/payton-dashboard:latest
+    container_name: payton-dashboard
+    restart: always
+    ports:
+      - '3000:3000'
+    networks:
+      - payton-net
+
+networks:
+  payton-net:
+    name: payton-backend_payton-net
+    external: true
