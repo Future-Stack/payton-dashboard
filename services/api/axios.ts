@@ -3,11 +3,11 @@ import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // The base URL from the requirements
-// const BASE_URL = "http://172.252.13.68:8000/api/v1";
-const BASE_URL = "https://onthebitefishing.com/api/v1";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://onthebitefishing.com/api/v1";
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
